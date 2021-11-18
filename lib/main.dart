@@ -48,7 +48,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  String _text ="";
 
   void _incrementCounter() {
     setState(() {
@@ -57,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _counter++;
+      _text = "Wowzers";
     });
   }
 
@@ -95,11 +95,19 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            TextField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: "Desired pokemon search string",
+              ),
+              onSubmitted: _textSubbmitted,
+            ),
             const Text(
-              'You have pushed the button this many times:',
+              'Copy this to Pokemon Go:'
+                  ':',
             ),
             Text(
-              '$_counter',
+              _text,
               style: Theme.of(context).textTheme.headline4,
             ),
           ],
@@ -109,7 +117,13 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
+  }
+
+  void _textSubbmitted(String value) {
+    setState(() {
+      _text = value;
+    });
   }
 }
