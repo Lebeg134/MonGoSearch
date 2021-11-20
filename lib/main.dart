@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mon_go_search/stringprocessor/graph.dart';
 
 void main() {
   runApp(const MyApp());
@@ -123,7 +124,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _textSubbmitted(String value) {
     setState(() {
-      _text = value;
+      _text = "before: "+value+" after: "+PrecedenceGraph.fromString(value).buildString();
+     /* if (bal == 0) {
+        _text = value;
+      }
+      else if (bal < 0) {
+        _text = "you dropped something :(";
+      }
+      else if (bal > 0){
+        _text = "you missed something ):";
+      }*/
+
+
     });
   }
 }
