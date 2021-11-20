@@ -136,8 +136,6 @@ class _MyHomePageState extends State<MyHomePage> {
         newGraph.nodes.add(Node.Id(0));
       }
       graph = newGraph;
-
-
     });
   }
 

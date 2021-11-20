@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
@@ -12,16 +14,16 @@ Pattern andSepPattern = RegExp(andSepString);
 Pattern bracketPatterns = RegExp(r"\)[^"+allValidCharacters+r")]|"
                                    r"[^"+allValidCharacters+r"(]\(");
 enum Operands {or, and}
-Operands? opFromString(String sep){
+Operands opFromString(String sep){
+  print("op from:"+sep);
   String firstChar = sep.characters.first;
-  Operands? operand;
   if (firstChar.contains(orSepPattern)){
-    operand = Operands.or;
+    return Operands.or;
   }
   else if(firstChar.contains(andSepPattern)){
-    operand = Operands.and;
+    return Operands.and;
   }
-  return operand;
+  throw "Illegal operand";
 }
 String getOperandLongName(Operands operand){
   switch(operand){
@@ -44,6 +46,10 @@ abstract class PrecedenceNode{
   List<Node> getNodes();
   void addToGraph(Graph graph);
   void debugPrint();
+  void register(PrecedenceNode precedenceNode){
+    children.add(precedenceNode);
+    precedenceNode.parent = this;
+  }
 }
 
 class PrecedenceLeaf extends PrecedenceNode{
@@ -75,7 +81,7 @@ class PrecedenceLeaf extends PrecedenceNode{
   @override
   void addToGraph(Graph graph) {
     //graph.addNode(node);
-    debugPrint();
+    //debugPrint();
     // Do nothing with the edges ¯\_(ツ)_/¯
   }
   @override
@@ -132,7 +138,7 @@ class OperandNode extends PrecedenceNode{
         break;
     }
     graph.addNode(node);
-    debugPrint();
+    //debugPrint();
     for(PrecedenceNode pNode in children){
       graph.addEdge(node, pNode.node, paint: Paint()..color = edgeColor);
       pNode.addToGraph(graph);
@@ -184,9 +190,7 @@ class PrecedenceGraph{
 
     return graph;
   }
-  void buildMap(){
 
-  }
 }
 
 class PGraphGenerator{
@@ -204,6 +208,7 @@ class PGraphGenerator{
     return balance;
   }
   static PrecedenceNode? generateFromString(Characters characters){
+    print("generating from: "+characters.string);
     if (characters.isEmpty) return null;
     if (!characters.contains("(")) return simpleGenerate(characters.string); //end of recursion
     int? firstLB;
@@ -220,31 +225,78 @@ class PGraphGenerator{
     }
     firstLB??= characters.length-1;
 
-/*    root = OperandNode.empty(Operands.and);
-    root.children.add(OperandNode(Operands.or, null, root));*/
-
     PrecedenceNode? root;
-    if (firstRB! < firstLB){
-      root = simpleGenerate(characters.getRange(0, firstRB).string);
-      OperandNode opNode = OperandNode.empty(opFromString(characters.elementAt(firstRB+1))??Operands.and);
+    OperandNode? focus;
+
+
+    root = simpleGenerate(characters.getRange(0, firstLB).string);
+    //focus = root?.children.last as OperandNode?;
+    Operands opType;
+
+    PrecedenceNode? middle = generateFromString(characters.getRange(firstLB+1, lastRB));
+    if (firstLB <= 0){
+      root = OperandNode.empty(Operands.and);
+      root.register(OperandNode.empty(Operands.or));
+      root.register(middle!);
+    }
+    else{
+      opType = opFromString(characters.elementAt(firstLB-1));
+      switch(opType){
+        case Operands.or:
+          root?.children.last.register(middle!);
+          break;
+        case Operands.and:
+          root?.register(middle!);
+          root?.register(OperandNode.empty(Operands.or));
+          break;
+      }
+    }
+    if (lastRB == characters.length-1) return root;
+
+    opType = opFromString(characters.elementAt(min(lastRB+1, characters.length-1)));
+    PrecedenceNode? tail = simpleGenerate(characters.getRange(lastRB+1, characters.length).string);
+    switch(opType){
+      case Operands.or:
+        root?.children.last.register(tail!);
+        break;
+      case Operands.and:
+        root?.register(tail!);
+        break;
+    }
+
+
+
+    //Iterator<OperandNode> orIter = root?.children.iterator as Iterator<OperandNode>;
+
+    /*OperandNode newOrNode = OperandNode.empty(Operands.or);
+    PrecedenceNode? root = OperandNode(Operands.and, [newOrNode], null);
+    newOrNode.parent = root;
+    OperandNode? focus = root as OperandNode?;*/
+
+
+
+  /*  if (firstRB! < firstLB){
+      PrecedenceNode? beforeFRB = simpleGenerate(characters.getRange(0, firstRB).string);
+      Operands opType = opFromString(characters.elementAt(firstRB+1))??Operands.and;
       PrecedenceNode? newNode = generateFromString(characters.getRange(firstRB+2, characters.length));
       if (newNode!=null){
-        opNode.children.add(root!);
-        root.parent=opNode;
-        root = opNode;
+        opNode.children.add(beforeFRB);
+
+
+        beforeFRB.parent=opNode;
+        beforeFRB = opNode;
         opNode.children.add(newNode);
         newNode.parent = opNode;
         return root;
       }
-    }
-    PrecedenceNode? focus;
+    }*/
 
-    root = simpleGenerate(characters.getRange(0, firstLB).string);
-    focus = root?.children.last.children.last;
-    focus??=root;
+    //root = simpleGenerate(characters.getRange(0, firstLB).string);
+
     return root;
   }
   static PrecedenceNode? simpleGenerate(String string){
+    print("simple from: "+string);
     PrecedenceNode root = OperandNode.empty(Operands.and);
     for (String ands in string.split(andSepPattern)){
       if(ands.isNotEmpty){
