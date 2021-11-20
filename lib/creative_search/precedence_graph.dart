@@ -51,7 +51,6 @@ abstract class PrecedenceNode{
     precedenceNode.parent = this;
   }
 }
-
 class PrecedenceLeaf extends PrecedenceNode{
   final String content;
   PrecedenceLeaf(this.content, PrecedenceNode? parent): super(parent, null){
@@ -89,7 +88,6 @@ class PrecedenceLeaf extends PrecedenceNode{
     print("|Leaf:"+content);
   }
 }
-
 class OperandNode extends PrecedenceNode{
   final Operands operand;
   OperandNode(this.operand, List<PrecedenceNode>? terms, PrecedenceNode? parent)
@@ -144,13 +142,11 @@ class OperandNode extends PrecedenceNode{
       pNode.addToGraph(graph);
     }
   }
-
   @override
   void debugPrint() {
     print("|OperandNode:"+getOperandLongName(operand));
   }
 }
-
 class PrecedenceGraph{
   PrecedenceNode? root;
   PrecedenceGraph(this.root);
@@ -187,7 +183,6 @@ class PrecedenceGraph{
 
   }
 }
-
 class PGraphGenerator{
   static bool checkValidity(String input){
     String string = input.replaceAll(" ", "");
@@ -208,7 +203,7 @@ class PGraphGenerator{
     if (!characters.contains("(")) return simpleGenerate(characters.string); //end of recursion
     int? firstLB;
     int? firstRB;
-    int lastRB = 0;
+    int? lastRB;
     for (int i = 0 ; i<characters.length ; i++){
       if ( characters.elementAt(i) == '('){
         firstLB??=i;
@@ -218,15 +213,23 @@ class PGraphGenerator{
         lastRB = i;
       }
     }
+
     firstLB??= characters.length-1;
-
+    firstRB??= characters.length-1;
     PrecedenceNode? root;
-
-
+    if (firstRB < firstLB){
+      if (firstRB == 0){
+        return generateFromString(characters.getRange(1,characters.length-1));
+      }
+      root = simpleGenerate(characters.getRange(0, firstRB).string);
+      Operands opType = opFromString(characters.elementAt(firstRB+1));
+      PrecedenceNode? newNode = generateFromString(characters.getRange(firstRB+2, characters.length-1));
+      registerToAndRoot(root!, newNode!, opType);
+      return root;
+    }
     root = simpleGenerate(characters.getRange(0, firstLB).string);
     Operands opType;
-
-    PrecedenceNode? middle = generateFromString(characters.getRange(firstLB+1, lastRB));
+    PrecedenceNode? middle = generateFromString(characters.getRange(firstLB+1, lastRB??characters.length));
     if (firstLB <= 0){
       root = OperandNode.empty(Operands.and);
       root.register(OperandNode.empty(Operands.or));
@@ -234,61 +237,26 @@ class PGraphGenerator{
     }
     else{
       opType = opFromString(characters.elementAt(firstLB-1));
-      switch(opType){
-        case Operands.or:
-          root?.children.last.register(middle!);
-          break;
-        case Operands.and:
-          root?.register(middle!);
-          root?.register(OperandNode.empty(Operands.or));
-          break;
-      }
+      registerToAndRoot(root!, middle!, opType);
     }
-    if (lastRB == characters.length-1) return root;
-
+    if (lastRB == null) return root;
     opType = opFromString(characters.elementAt(min(lastRB+1, characters.length-1)));
     PrecedenceNode? tail = simpleGenerate(characters.getRange(lastRB+1, characters.length).string);
-    switch(opType){
-      case Operands.or:
-        root?.children.last.register(tail!);
-        break;
-      case Operands.and:
-        root?.register(tail!);
-        break;
-    }
-
-
-
-    //Iterator<OperandNode> orIter = root?.children.iterator as Iterator<OperandNode>;
-
-    /*OperandNode newOrNode = OperandNode.empty(Operands.or);
-    PrecedenceNode? root = OperandNode(Operands.and, [newOrNode], null);
-    newOrNode.parent = root;
-    OperandNode? focus = root as OperandNode?;*/
-
-
-
-  /*  if (firstRB! < firstLB){
-      PrecedenceNode? beforeFRB = simpleGenerate(characters.getRange(0, firstRB).string);
-      Operands opType = opFromString(characters.elementAt(firstRB+1))??Operands.and;
-      PrecedenceNode? newNode = generateFromString(characters.getRange(firstRB+2, characters.length));
-      if (newNode!=null){
-        opNode.children.add(beforeFRB);
-
-
-        beforeFRB.parent=opNode;
-        beforeFRB = opNode;
-        opNode.children.add(newNode);
-        newNode.parent = opNode;
-        return root;
-      }
-    }*/
-
-    //root = simpleGenerate(characters.getRange(0, firstLB).string);
-
+    registerToAndRoot(root, tail!, opType);
     return root;
   }
+  static void registerToAndRoot(PrecedenceNode root, PrecedenceNode node, Operands opType){
+    if (opType == Operands.and){
+      root.register(OperandNode.empty(Operands.or));
+    }
+    root.children.last.register(node);
+  }
   static PrecedenceNode? simpleGenerate(String string){
+    if (string.isEmpty){
+      PrecedenceNode? root = OperandNode.empty(Operands.and);
+      root.register(OperandNode.empty(Operands.or));
+      return root;
+    }
     print("simple from: "+string);
     PrecedenceNode root = OperandNode.empty(Operands.and);
     for (String ands in string.split(andSepPattern)){

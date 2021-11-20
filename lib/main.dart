@@ -131,9 +131,9 @@ class _MyHomePageState extends State<MyHomePage> {
       _text = precedenceGraph?.buildString()??":3";
 
       var newGraph = precedenceGraph?.toGraph();
-      if (newGraph == null){
+      if (newGraph == null || graph.nodes.isEmpty){
         newGraph = Graph()..isTree = true;
-        newGraph.nodes.add(Node.Id(0));
+        newGraph.nodes.add(Node.Id(134));
       }
       graph = newGraph;
     });
@@ -141,8 +141,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
+    super.initState();
     graph = Graph()..isTree = true;
     graph.addNode(Node.Id(134));
+    nodeNames[Node.Id(134)]="Made by Lebeg134";
 
     builder
       ..siblingSeparation = (100)

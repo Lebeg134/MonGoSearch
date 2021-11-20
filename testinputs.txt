@@ -1,0 +1,3 @@
+a,b&c,(nemlétezek)&d
+134,135&134,shiny
+134,135&((134,shiny)&cool), levys
