@@ -8,9 +8,8 @@ const andSepString = "&";
 const allSepCharacters = ",:;&";
 Pattern orSepPattern = RegExp(orSepString);
 Pattern andSepPattern = RegExp(andSepString);
-Pattern leftBracketPattern = RegExp(r"\)[^"+allSepCharacters+r"]|[^"+allSepCharacters+r"]\(");
-
-
+Pattern bracketPatterns = RegExp(r"\)[^"+allSepCharacters+r"]|"
+                                   r"[^"+allSepCharacters+r"]\(");
 abstract class PrecedenceNode{
   PrecedenceNode? parent;
   List<PrecedenceNode>? children;
@@ -29,7 +28,8 @@ class PrecedenceLeaf extends PrecedenceNode{
   String getString(){
     return content;
   }
-  static List<PrecedenceNode> fromStrings(List<String> strings,PrecedenceNode parent){
+  static List<PrecedenceNode>
+  fromStrings(List<String> strings,PrecedenceNode parent){
     List<PrecedenceNode> output = <PrecedenceLeaf>[];
     for (String string in strings){
       PrecedenceLeaf leaf = PrecedenceLeaf(string, parent);
@@ -41,7 +41,8 @@ class PrecedenceLeaf extends PrecedenceNode{
 }
 class OperandNode extends PrecedenceNode{
   final Operands operand;
-  OperandNode(this.operand, List<PrecedenceNode>? terms, PrecedenceNode? parent):super(parent, terms);
+  OperandNode(this.operand, List<PrecedenceNode>? terms, PrecedenceNode? parent)
+      :super(parent, terms);
   OperandNode.empty(Operands operand):this(operand, null, null);
   @override
   String getString(){
@@ -74,8 +75,8 @@ class PrecedenceGraph{
       root = PGraphGenerator.simpleGenerate(string);
     }
     else{
-      if (!PGraphGenerator.checkBalance(string)){
-        root = PrecedenceLeaf.foster("Brackets not balanced!");
+      if (!PGraphGenerator.checkValidity(string)){
+        root = PrecedenceLeaf.foster("Check your brackets!");
       }
       else{
         root = PrecedenceLeaf.foster("Working on it...");
@@ -95,8 +96,9 @@ class PrecedenceGraph{
 
 }
 class PGraphGenerator{
-  static bool checkBalance(String string){
-    return getBalance(string)==0;
+  static bool checkValidity(String input){
+    String string = input.replaceAll(" ", "");
+    return getBalance(string)==0 && !string.contains(bracketPatterns);
   }
   static int getBalance(String string){
     int balance = 0;
