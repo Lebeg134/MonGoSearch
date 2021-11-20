@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
 enum Operands {or, and}
-const String orChar = 'OR';
-const String andChar = 'AND';
-const Pattern orSepPattern = ',|:|;';
-const Pattern andSepPattern = '&';
+const String orChar = ',';
+const String andChar = '&';
+const orSepString = "(:|,|;)";
+const andSepString = "&";
+const allSepCharacters = ",:;&";
+Pattern orSepPattern = RegExp(orSepString);
+Pattern andSepPattern = RegExp(andSepString);
+Pattern leftBracketPattern = RegExp(r"\)[^"+allSepCharacters+r"]|[^"+allSepCharacters+r"]\(");
 
 
 abstract class PrecedenceNode{
@@ -65,6 +69,7 @@ class PrecedenceGraph{
   PrecedenceNode? root;
   PrecedenceGraph(this.root);
   PrecedenceGraph.fromString(String string){
+    string = string.replaceAll(" ", "");
     if (!string.contains('(')){
       root = PGraphGenerator.simpleGenerate(string);
     }
@@ -127,10 +132,10 @@ class PGraphGenerator{
   static PrecedenceNode? simpleGenerate(String string){
     PrecedenceNode root = OperandNode(Operands.and, null, null);
 
-    for (String ands in string.split('&')){
+    for (String ands in string.split(andSepPattern)){
       OperandNode ors = OperandNode(Operands.or, null, root);
       root.children?.add(ors);
-      ors.children = PrecedenceLeaf.fromStrings(ands.split(','), ors);
+      ors.children = PrecedenceLeaf.fromStrings(ands.split(orSepPattern), ors);
     }
     return root;
   }
