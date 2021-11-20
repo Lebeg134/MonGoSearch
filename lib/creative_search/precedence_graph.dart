@@ -179,18 +179,13 @@ class PrecedenceGraph{
     return ret;
   }
   Graph toGraph(){
-    print("heyyo");
     final Graph graph = Graph()..isTree = true;
-    if(root != null){
-      root?.addToGraph(graph);
-    }
-    else{
-      print("Root null!");
-    }
-
+    root?.addToGraph(graph);
     return graph;
   }
+  void compact(){
 
+  }
 }
 
 class PGraphGenerator{
@@ -226,11 +221,9 @@ class PGraphGenerator{
     firstLB??= characters.length-1;
 
     PrecedenceNode? root;
-    OperandNode? focus;
 
 
     root = simpleGenerate(characters.getRange(0, firstLB).string);
-    //focus = root?.children.last as OperandNode?;
     Operands opType;
 
     PrecedenceNode? middle = generateFromString(characters.getRange(firstLB+1, lastRB));
