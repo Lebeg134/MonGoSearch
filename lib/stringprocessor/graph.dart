@@ -4,11 +4,11 @@ const String orChar = ',';
 const String andChar = '&';
 const orSepString = "(:|,|;)";
 const andSepString = "&";
-const allSepCharacters = ",:;&";
+const allValidCharacters = ",:;&()";
 Pattern orSepPattern = RegExp(orSepString);
 Pattern andSepPattern = RegExp(andSepString);
-Pattern bracketPatterns = RegExp(r"\)[^"+allSepCharacters+r"]|"
-                                   r"[^"+allSepCharacters+r"]\(");
+Pattern bracketPatterns = RegExp(r"\)[^"+allValidCharacters+r"]|"
+                                   r"[^"+allValidCharacters+r"]\(");
 enum Operands {or, and}
 Operands? opFromString(String sep){
   String firstChar = sep.characters.first;
@@ -126,6 +126,7 @@ class PGraphGenerator{
   }
   static PrecedenceNode? generateFromString(Characters characters){
     if (characters.isEmpty) return null;
+    if (!characters.contains("(")) return simpleGenerate(characters.string); //end of recursion
     int? firstLB;
     int? firstRB;
     int lastRB = 0;
@@ -138,28 +139,36 @@ class PGraphGenerator{
         lastRB = i;
       }
     }
-    PrecedenceNode? root = simpleGenerate(characters.getRange(0, firstLB).string);
-    PrecedenceNode? middle = generateFromString(characters.getRange(
-        firstLB == null ? lastRB-1 : firstLB +1,
-        lastRB-1));
-    PrecedenceNode? tail = simpleGenerate(characters.getRange(lastRB+1, characters.length).string);
+    firstLB??= characters.length-1;
 
-    /*if (firstRB == lastRB){
-      middle = simpleGenerate(characters.getRange(firstLB??lastRB, lastRB).string);
-    }
-    else{
-      if (firstRB != null){
-        Operands? op = opFromString(characters.elementAt(firstRB+1));
-        if (op != null){
-          middle = OperandNode.empty(op);
-          PrecedenceNode? newNode = simpleGenerate(characters.getRange(firstLB??0, firstRB).string);
-          if (newNode != null){
-            middle.children.add(newNode);
-          }
-          newNode = generateFromString(characters.getRange(firstRB+2, lastRB-1));
-        }
+/*    root = OperandNode.empty(Operands.and);
+    root.children.add(OperandNode(Operands.or, null, root));*/
+
+    PrecedenceNode? root;
+    if (firstRB! < firstLB){
+      root = simpleGenerate(characters.getRange(0, firstRB).string);
+      OperandNode opNode = OperandNode.empty(opFromString(characters.elementAt(firstRB+1))??Operands.and);
+      PrecedenceNode? newNode = generateFromString(characters.getRange(firstRB+2, characters.length));
+      if (newNode!=null){
+        opNode.children.add(root!);
+        root.parent=opNode;
+        root = opNode;
+        opNode.children.add(newNode);
+        newNode.parent = opNode;
+        return root;
       }
-    }*/
+    }
+    PrecedenceNode? focus;
+
+    root = simpleGenerate(characters.getRange(0, firstLB).string);
+    focus = root?.children.last.children.last;
+    focus??=root;
+
+
+
+
+
+
     return root;
   }
   static PrecedenceNode? simpleGenerate(String string){
