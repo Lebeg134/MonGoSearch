@@ -33,11 +33,15 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String _text ="";
   PrecedenceGraph? precedenceGraph;
+  final myController = TextEditingController();
 
-  void _incrementCounter() {
+  void _clear() {
     setState(() {
-      _text = "Wowzers";
+      _text = r"¯\_(ツ)_/¯";
       precedenceGraph = null;
+      graph = Graph()..isTree = true;
+      graph.nodes.add(Node.Id(134));
+      nodeNames[Node.Id(134)] = "Cleared";
     });
   }
 
@@ -56,12 +60,44 @@ class _MyHomePageState extends State<MyHomePage> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      TextField(
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: "Desired pokemon search string",
-                        ),
-                        onSubmitted: _textSubmitted,
+                      Text(
+                        "You can use brackets! () :D",
+                        style: Theme.of(context).textTheme.headline4,
+                      ),
+                      Container(
+                        height: 69,
+                        constraints: const BoxConstraints(maxWidth: 750),
+                        child:
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: <Widget>[
+                                Flexible(
+                                  flex: 4,
+                                  child:
+                                  TextField(
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      hintText: "Desired pokemon search string",
+                                    ),
+                                    onSubmitted: _textSubmitted,
+                                    controller: myController,
+                                  ),
+                                ),
+                                Flexible(
+                                  flex: 1,
+                                  child:
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      minimumSize: const Size.fromHeight(58),
+                                    ),
+                                    onPressed: _onPressed,
+                                    child: const Text(
+                                      "Convert!",
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                       ),
                       const Text(
                         'Copy this to Pokemon Go:',
@@ -77,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Expanded(
               child: InteractiveViewer(
                   constrained: false,
-                  boundaryMargin: EdgeInsets.all(100),
+                  boundaryMargin: const EdgeInsets.all(100),
                   minScale: 0.01,
                   maxScale: 5.6,
                   child: GraphView(
@@ -97,9 +133,9 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _clear,
         tooltip: 'Clear',
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.delete),
       ),
     );
   }
@@ -113,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
         print('This is a node');
       },
       child: Container(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(4),
             boxShadow: const [
@@ -144,12 +180,15 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     graph = Graph()..isTree = true;
     graph.addNode(Node.Id(134));
-    nodeNames[Node.Id(134)]="Made by Lebeg134";
 
     builder
       ..siblingSeparation = (100)
       ..levelSeparation = (150)
       ..subtreeSeparation = (150)
       ..orientation = (BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM);
+  }
+
+  void _onPressed() {
+    _textSubmitted(myController.text);
   }
 }

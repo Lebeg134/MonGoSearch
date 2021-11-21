@@ -32,7 +32,7 @@ String getOperandLongName(Operands operand){
   }
 }
 int globalID = 0;
-Map<Node, String> nodeNames = {};
+Map<Node, String> nodeNames = { Node.Id(134):"Made by Lebeg134"};
 abstract class PrecedenceNode{
   Node node;
   PrecedenceNode? parent;
@@ -67,8 +67,7 @@ class PrecedenceLeaf extends PrecedenceNode{
     for (String string in strings){
       if (string.isNotEmpty){
         PrecedenceLeaf leaf = PrecedenceLeaf(string, parent);
-        parent.children.add(leaf);
-        output.add(leaf);
+        parent.register(leaf);
       }
     }
     return output;
@@ -79,8 +78,6 @@ class PrecedenceLeaf extends PrecedenceNode{
   }
   @override
   void addToGraph(Graph graph) {
-    //graph.addNode(node);
-    //debugPrint();
     // Do nothing with the edges ¯\_(ツ)_/¯
   }
   @override
@@ -161,7 +158,6 @@ class PrecedenceGraph{
         root = PrecedenceLeaf.foster("Check your brackets!");
       }
       else{
-        //root = PrecedenceLeaf.foster("Working on it...");
         root = PGraphGenerator.generateFromString(string.characters);
       }
     }
@@ -239,8 +235,8 @@ class PGraphGenerator{
       opType = opFromString(characters.elementAt(firstLB-1));
       registerToAndRoot(root!, middle!, opType);
     }
-    if (lastRB == null) return root;
-    opType = opFromString(characters.elementAt(min(lastRB+1, characters.length-1)));
+    if (lastRB == null || lastRB +1 >= characters.length) return root;
+    opType = opFromString(characters.elementAt(lastRB+1));
     PrecedenceNode? tail = simpleGenerate(characters.getRange(lastRB+1, characters.length).string);
     registerToAndRoot(root, tail!, opType);
     return root;
@@ -266,7 +262,7 @@ class PGraphGenerator{
         ors.removeWhere((element) => element == "");
         if (ors.isNotEmpty){
           root.children.add(or);
-          or.children = PrecedenceLeaf.fromStrings(ors, or);
+          PrecedenceLeaf.fromStrings(ors, or);
         }
       }
     }
