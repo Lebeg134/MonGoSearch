@@ -156,7 +156,7 @@ class PrecedenceGraph{
         root = PrecedenceLeaf.foster("Check your brackets!");
       }
       else{
-        root = PGraphGenerator.generateFromString(string.characters, null);
+        root = PGraphGenerator.generateFromString(string.characters);
       }
     }
   }
@@ -191,51 +191,42 @@ class PGraphGenerator{
     }
     return balance;
   }
-  static PrecedenceNode? generateFromString(Characters characters, PrecedenceNode? parent){
+  static PrecedenceNode generateFromString(Characters characters){
     print("generating from: "+characters.string);
-    if (characters.isEmpty) return null;
+    if (characters.isEmpty) return simpleGenerate("");
     if (!characters.contains("(")) return simpleGenerate(characters.string); //end of recursion
-    int? firstLB;
-    int? firstRB;
-    int? lastRB;
+    int? openLB;
+    int? closeRB;
+    int depth= 0;
     for (int i = 0 ; i<characters.length ; i++){
       if ( characters.elementAt(i) == '('){
-        firstLB??=i;
+        openLB??=i;
+        depth++;
       }
-      if ( characters.elementAt(i) == ')'){
-        firstRB??=i;
-        lastRB = i;
+      if( characters.elementAt(i) == ')'){
+        depth--;
+      }
+      if (openLB != null && depth == 0){
+        closeRB??= i;
       }
     }
 
-    firstLB??= characters.length-1;
-    firstRB??= characters.length-1;
-    PrecedenceNode? root;
-    if (firstRB < firstLB){
-      if (firstRB == 0){
-        return generateFromString(characters.getRange(1,characters.length-1), null);
-      }
-      root = simpleGenerate(characters.getRange(0, firstRB).string);
-      Operands opType = opFromString(characters.elementAt(firstRB+1));
-      PrecedenceNode? newNode = generateFromString(characters.getRange(firstRB+2, characters.length), root);
-      parent??=simpleGenerate("");
-      registerToAndRoot(parent, newNode!, opType);
-      return root;
-    }
-    root = simpleGenerate(characters.getRange(0, firstLB).string);
+    openLB??= characters.length-1;
+    closeRB??= characters.length-1;
+    PrecedenceNode root = simpleGenerate(characters.getRange(0, openLB).string);
+    print("generating middle: openLB: {$openLB} closeRB:{$closeRB}");
+    PrecedenceNode middle = generateFromString(characters.getRange(openLB+1, closeRB));
     Operands opType;
-    PrecedenceNode? middle = generateFromString(characters.getRange(firstLB+1, lastRB??characters.length), root);
-    if (firstLB <= 0){
-      root = simpleGenerate("");
-      root.register(middle!);
+    if (openLB <= 0){
+      root.register(middle);
     }
     else{
-      opType = opFromString(characters.elementAt(firstLB-1));
-      registerToAndRoot(root, middle!, opType);
+      opType = opFromString(characters.elementAt(openLB-1));
+      registerToAndRoot(root, middle, opType);
     }
-    if (lastRB == null || lastRB +1 >= characters.length) return root;
-    opType = opFromString(characters.elementAt(lastRB+1));
-    PrecedenceNode? tail = simpleGenerate(characters.getRange(lastRB+1, characters.length).string);
+    opType = opFromString(characters.elementAt(closeRB+1));
+    print("generating tail:");
+    PrecedenceNode tail = generateFromString(characters.getRange(closeRB+1, characters.length));
     registerToAndRoot(root, tail, opType);
     return root;
   }
