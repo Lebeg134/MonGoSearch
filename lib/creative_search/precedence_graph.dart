@@ -159,17 +159,27 @@ class OperandNode extends PrecedenceNode{
   String getString(){
     if (children.isEmpty) return "";
     String string = "";
+    String modifier = "";
     String sep;
     switch(operand){
       case Operands.or:
         sep = orChar;
         break;
       case Operands.and:
+        if (parent != null){
+          OperandNode pr = parent as OperandNode;
+          if (pr.operand == Operands.or){
+            for (PrecedenceNode node in parent!.children){
+              if (node == this) continue;
+              modifier += node.getString() + ",";
+            }
+          }
+        }
         sep = andChar;
         break;
     }
     for (PrecedenceNode node in children){
-      string += node.getString();
+      string += modifier + node.getString();
       if(node != children.last){
         string += sep;
       }
@@ -235,7 +245,7 @@ class PrecedenceGraph{
   }
   String buildString(){
     String? ret = root?.getString();
-    ret ??= "";
+    ret ??= "Error";
     return ret;
   }
   Graph toGraph(){
