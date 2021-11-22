@@ -354,7 +354,7 @@ class PGraphGenerator{
     PrecedenceNode middle = generateFromString(characters.getRange(openLB+1, closeRB));
     Operands opType;
     if (openLB <= 0){
-      root.register(middle);
+      root.children.first.register(middle);
     }
     else{
       opType = opFromString(characters.elementAt(openLB-1));
