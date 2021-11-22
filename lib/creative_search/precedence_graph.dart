@@ -72,34 +72,6 @@ abstract class PrecedenceNode{
     }
     if (debugLevel >=2 ) return this;
     if (isEnd()) return this;
-    if (!isEnd() && children.isEmpty) return null;
-    PrecedenceNode end = this;
-    while(end.children.length == 1){
-      end = end.children.first;
-    }
-    if (debugLevel >0) print("end node: {$end}");
-    if (end!= this){
-      if (debugLevel >0 ){
-        int num = end.node.key!.value;
-        print("Shortcut to node{$num}!");
-      }
-      if(end.isEnd() || end.children.isNotEmpty){
-        end.compact();
-        return end;
-      }
-    }
-    List<PrecedenceNode> newChildren = [];
-    for(PrecedenceNode child in children){
-      var newChild = child.compact();
-      if (newChild != null){
-        newChildren.add(newChild);
-      }
-    }
-    children.clear();
-    for (PrecedenceNode newchild in newChildren){
-      register(newchild);
-    }
-    return this;
   }
   bool isEnd();
   void removeFromParent(){
@@ -220,6 +192,45 @@ class OperandNode extends PrecedenceNode{
   bool isEnd() {
     return false;
   }
+  @override
+  PrecedenceNode? compact() {
+    super.compact(); // beacause of debug print
+    if (debugLevel >=2 ) return this;
+    PrecedenceNode end = this;
+    while(end.children.length == 1){
+      end = end.children.first;
+    }
+    if (debugLevel >0) print("end node: {$end}");
+    if (end!= this){
+      if (debugLevel >0 ){
+        int num = end.node.key!.value;
+        print("Shortcut to node{$num}!");
+      }
+      if(end.isEnd() || end.children.isNotEmpty){
+        end.compact();
+        return end;
+      }
+    }
+    List<PrecedenceNode> newChildren = [];
+    for(PrecedenceNode child in children){
+      var newChild = child.compact();
+      if (newChild != null){
+        if (newChild is OperandNode && operand == newChild.operand){
+          for (PrecedenceNode migratingChild in newChild.children){
+            newChildren.add(migratingChild);
+          }
+        }
+        else{
+          newChildren.add(newChild);
+        }
+      }
+    }
+    children.clear();
+    for (PrecedenceNode newchild in newChildren){
+      register(newchild);
+    }
+    return this;
+  }
 }
 class PrecedenceGraph{
   PrecedenceNode? root;
@@ -244,9 +255,9 @@ class PrecedenceGraph{
     this.root = root;
   }
   String buildString(){
-    String? ret = root?.getString();
-    ret ??= "Error";
-    return ret;
+    String? output = root?.getString();
+    output ??= "Error";
+    return PGraphGenerator.simplifyResult(output);
   }
   Graph toGraph(){
     final Graph graph = Graph()..isTree = true;
@@ -264,6 +275,23 @@ class PGraphGenerator{
   static bool checkValidity(String input){
     String string = input.replaceAll(" ", "");
     return getBalance(string)==0 && !string.contains(bracketPatterns);
+  }
+  static String simplifyResult(String input){
+    Set<String> ands = input.split(andSepPattern).toSet();
+    String output = "";
+    for (String and in ands){
+      Set<String> ors = and.split(orSepPattern).toSet();
+      for (String or in ors){
+        output+=or;
+        if (or != ors.last){
+          output+=orChar;
+        }
+      }
+      if (and != ands.last){
+        output+=andChar;
+      }
+    }
+    return output;
   }
   static int getBalance(String string){
     int balance = 0;
