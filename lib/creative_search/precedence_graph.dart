@@ -5,8 +5,9 @@ import 'package:graphview/GraphView.dart';
 /// debugLevel
 /// 0 - off
 /// 1 - print data
-/// 2 - don't compact
-const int debugLevel = 1;
+/// 2 - don't generate string
+/// 3 - don't compact
+const int debugLevel = 2;
 const String orChar = ',';
 const String andChar = '&';
 const orSepString = "(:|,|;)";
@@ -68,9 +69,10 @@ abstract class PrecedenceNode{
   PrecedenceNode? compact(){
     if (debugLevel > 0){
       int num = node.key!.value;
-      print("Compacting node{$num}!");
+      print("Compacting node$num:");
+      debugPrint();
     }
-    if (debugLevel >=2 ) return this;
+    if (debugLevel >=3 ) return this;
     if (isEnd()) return this;
   }
   bool isEnd();
@@ -84,7 +86,13 @@ abstract class PrecedenceNode{
 class PrecedenceLeaf extends PrecedenceNode{
   final String content;
   PrecedenceLeaf(this.content, PrecedenceNode? parent): super(parent, null){
-    nodeNames[node] = content;
+    if (debugLevel > 0){
+      var num = node.key!.value;
+      nodeNames[node] = "$num "+content;
+    }
+    else{
+      nodeNames[node] = content;
+    }
   }
   PrecedenceLeaf.foster(String content):this(content, null);
   @override
@@ -124,7 +132,13 @@ class OperandNode extends PrecedenceNode{
   final Operands operand;
   OperandNode(this.operand, List<PrecedenceNode>? terms, PrecedenceNode? parent)
       :super(parent, terms){
-    nodeNames[node] = getOperandLongName(operand);
+    if (debugLevel > 0){
+      var num = node.key!.value;
+      nodeNames[node] = "$num "+getOperandLongName(operand);
+    }
+    else{
+      nodeNames[node] = getOperandLongName(operand);
+    }
   }
   OperandNode.empty(Operands operand):this(operand, null, null);
   @override
@@ -178,7 +192,6 @@ class OperandNode extends PrecedenceNode{
         break;
     }
     graph.addNode(node);
-    //debugPrint();
     for(PrecedenceNode pNode in children){
       graph.addEdge(node, pNode.node, paint: Paint()..color = edgeColor);
       pNode.addToGraph(graph);
@@ -195,12 +208,18 @@ class OperandNode extends PrecedenceNode{
   @override
   PrecedenceNode? compact() {
     super.compact(); // beacause of debug print
-    if (debugLevel >=2 ) return this;
+    if (debugLevel >=3 ) return this;
+    if (children.isEmpty) return null;
     PrecedenceNode end = this;
     while(end.children.length == 1){
       end = end.children.first;
     }
-    if (debugLevel >0) print("end node: {$end}");
+    if (debugLevel >0)
+    {
+      int num = end.node.key!.value;
+      print("end node:$num");
+      end.debugPrint();
+    }
     if (end!= this){
       if (debugLevel >0 ){
         int num = end.node.key!.value;
@@ -225,6 +244,8 @@ class OperandNode extends PrecedenceNode{
         }
       }
     }
+
+    if (newChildren.isEmpty) return null;
     children.clear();
     for (PrecedenceNode newchild in newChildren){
       register(newchild);
@@ -255,6 +276,7 @@ class PrecedenceGraph{
     this.root = root;
   }
   String buildString(){
+    if (debugLevel >=2) return "Disabled";
     String? output = root?.getString();
     output ??= "Error";
     return PGraphGenerator.simplifyResult(output);
@@ -268,7 +290,9 @@ class PrecedenceGraph{
     return graph;
   }
   void compact(){
+    if (debugLevel >0) print("==Compact start==");
     root?.compact();
+    if (debugLevel >0) print("==Compact end==");
   }
 }
 class PGraphGenerator{
