@@ -144,9 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget rectangleWidget(String text) {
     return InkWell(
-      onTap: () {
-        print('This is a node');
-      },
+      onTap: _nodeTapped,
       child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -183,5 +181,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _onPressed() {
     _textSubmitted(myController.text);
+  }
+
+  void _nodeTapped() {
+    // Do nothing atm
   }
 }

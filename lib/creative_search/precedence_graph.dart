@@ -2,6 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 
+/// debugLevel
+/// 0 - off
+/// 1 - print data
+/// 2 - don't compact
+const int debugLevel = 1;
 const String orChar = ',';
 const String andChar = '&';
 const orSepString = "(:|,|;)";
@@ -13,7 +18,7 @@ Pattern bracketPatterns = RegExp(r"\)[^"+allValidCharacters+r")]|"
                                    r"[^"+allValidCharacters+r"(]\(");
 enum Operands {or, and}
 Operands opFromString(String sep){
-  print("op from:"+sep);
+  if (debugLevel > 0) print("op from:"+sep);
   String firstChar = sep.characters.first;
   if (firstChar.contains(orSepPattern)){
     return Operands.or;
@@ -31,12 +36,16 @@ String getOperandLongName(Operands operand){
 }
 int globalID = 0;
 /// Negative node Ids are reserved for status codes
-/// Range 200-299 success:
+/// Range 200-299 Success:
+/// -200 = Root
 /// -201 = Made by Lebeg134
 /// -204 = Cleared
+/// -205 = Empty
 Map<Node, String> nodeNames = {
-  Node.Id(-201):"Made by Lebeg134",
+  Node.Id(-200): "AncestorRoot",
+  Node.Id(-201): "Made by Lebeg134",
   Node.Id(-204): "Cleared",
+  Node.Id(-205): "Empty",
 };
 abstract class PrecedenceNode{
   Node node;
@@ -57,14 +66,25 @@ abstract class PrecedenceNode{
   }
   /// Returning null means node can be removed from parent
   PrecedenceNode? compact(){
+    if (debugLevel > 0){
+      int num = node.key!.value;
+      print("Compacting node{$num}!");
+    }
+    if (debugLevel >=2 ) return this;
     if (isEnd()) return this;
     if (!isEnd() && children.isEmpty) return null;
     PrecedenceNode end = this;
     while(end.children.length == 1){
-      end = end.children[0];
+      end = end.children.first;
     }
+    if (debugLevel >0) print("end node: {$end}");
     if (end!= this){
+      if (debugLevel >0 ){
+        int num = end.node.key!.value;
+        print("Shortcut to node{$num}!");
+      }
       if(end.isEnd() || end.children.isNotEmpty){
+        end.compact();
         return end;
       }
     }
@@ -75,7 +95,10 @@ abstract class PrecedenceNode{
         newChildren.add(newChild);
       }
     }
-    children = newChildren;
+    children.clear();
+    for (PrecedenceNode newchild in newChildren){
+      register(newchild);
+    }
     return this;
   }
   bool isEnd();
@@ -117,7 +140,7 @@ class PrecedenceLeaf extends PrecedenceNode{
   }
   @override
   void debugPrint() {
-    print("|Leaf:"+content);
+    if (debugLevel > 0) print("|Leaf:"+content);
   }
 
   @override
@@ -181,7 +204,7 @@ class OperandNode extends PrecedenceNode{
   }
   @override
   void debugPrint() {
-    print("|OperandNode:"+getOperandLongName(operand));
+    if (debugLevel > 0) print("|OperandNode:"+getOperandLongName(operand));
   }
   @override
   bool isEnd() {
@@ -224,6 +247,22 @@ class PrecedenceGraph{
     return graph;
   }
   void compact(){
+    /*if (root!= null){
+      OperandNode ancestor = OperandNode.empty(Operands.and);
+      ancestor.register(root!);
+      ancestor.compact();
+      if (ancestor.children.isEmpty){
+        root = PrecedenceLeaf.foster("Please specify some tags");
+      }
+      else if (root != ancestor.children.first){
+        if (debugLevel > 0) print("Moved root!");
+        root = ancestor.children.first;
+      }
+    }
+    else{
+      if (debugLevel > 0) print("Root null");
+      root = PrecedenceLeaf.foster("Error: root null");
+    }*/
     root?.compact();
   }
 }
@@ -242,9 +281,9 @@ class PGraphGenerator{
     return balance;
   }
   static PrecedenceNode generateFromString(Characters characters){
-    print("generating from: "+characters.string);
-    if (characters.isEmpty) return simpleGenerate("");
-    if (!characters.contains("(")) return simpleGenerate(characters.string); //end of recursion
+    if (debugLevel > 0) print("generating from: "+characters.string);
+    if (characters.isEmpty) return simpleGenerate(""); //ends of recursion
+    if (!characters.contains("(")) return simpleGenerate(characters.string);
     int? openLB;
     int? closeRB;
     int depth= 0;
@@ -263,8 +302,9 @@ class PGraphGenerator{
 
     openLB??= characters.length-1;
     closeRB??= characters.length-1;
+    if (debugLevel > 0) print("generating root:");
     PrecedenceNode root = simpleGenerate(characters.getRange(0, openLB).string);
-    print("generating middle: openLB: {$openLB} closeRB:{$closeRB}");
+    if (debugLevel > 0) print("generating middle: openLB: {$openLB} closeRB:{$closeRB}");
     PrecedenceNode middle = generateFromString(characters.getRange(openLB+1, closeRB));
     Operands opType;
     if (openLB <= 0){
@@ -274,25 +314,27 @@ class PGraphGenerator{
       opType = opFromString(characters.elementAt(openLB-1));
       registerToAndRoot(root, middle, opType);
     }
-    opType = opFromString(characters.elementAt(closeRB+1));
-    print("generating tail:");
-    PrecedenceNode tail = generateFromString(characters.getRange(closeRB+1, characters.length));
-    registerToAndRoot(root, tail, opType);
+    if (closeRB != characters.length-1){
+      if (debugLevel > 0) print("generating tail:");
+      opType = opFromString(characters.elementAt(closeRB+1));
+      PrecedenceNode tail = generateFromString(characters.getRange(closeRB+1, characters.length));
+      registerToAndRoot(root, tail, opType);
+    }
     return root;
   }
   static void registerToAndRoot(PrecedenceNode root, PrecedenceNode node, Operands opType){
-    if (opType == Operands.and){
+    if (opType == Operands.and || root.children.isEmpty){ // Check this if something is incorrect
       root.register(OperandNode.empty(Operands.or));
     }
     root.children.last.register(node);
   }
   static PrecedenceNode simpleGenerate(String string){
-    if (string.isEmpty){
+    if (string.characters.isEmpty){
       PrecedenceNode? root = OperandNode.empty(Operands.and);
       root.register(OperandNode.empty(Operands.or));
       return root;
     }
-    print("simple from: "+string);
+    if (debugLevel > 0) print("simple from: "+string);
     PrecedenceNode root = OperandNode.empty(Operands.and);
     for (String ands in string.split(andSepPattern)){
       if(ands.isNotEmpty){
