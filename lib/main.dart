@@ -40,8 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _text = r"¯\_(ツ)_/¯";
       precedenceGraph = null;
       graph = Graph()..isTree = true;
-      graph.nodes.add(Node.Id(134));
-      nodeNames[Node.Id(134)] = "Cleared";
+      graph.nodes.add(Node.Id(-204));
     });
   }
 
@@ -125,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ..style = PaintingStyle.stroke,
                     builder: (Node node) {
                       // I can decide what widget should be shown here based on the id
-                      return rectangleWidget(nodeNames[node]??"EMPTY");
+                      return rectangleWidget(nodeNames[node]??"Error");
                     },
                   )),
             ),
@@ -164,14 +163,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void _textSubmitted(String value) {
     setState(() {
       precedenceGraph = PrecedenceGraph.fromString(value);
-      _text = precedenceGraph?.buildString()??":3";
-
-      var newGraph = precedenceGraph?.toGraph();
-      if (newGraph == null || graph.nodes.isEmpty){
-        newGraph = Graph()..isTree = true;
-        newGraph.nodes.add(Node.Id(134));
-      }
-      graph = newGraph;
+      _text = precedenceGraph?.buildString()??"Error";
+      graph = precedenceGraph!.toGraph();
     });
   }
 
@@ -179,7 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     graph = Graph()..isTree = true;
-    graph.addNode(Node.Id(134));
+    graph.addNode(Node.Id(-201));
 
     builder
       ..siblingSeparation = (100)

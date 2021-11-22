@@ -1,5 +1,6 @@
 a,b&c,(nemlétezek)&d
 134,135&134,shiny
-134,135&((134,shiny)&cool), levys
-134,135&(asd,cas),(sumthing)
+134,135&((134,shiny)&3*), levys
+134,135&(0*,1*),(2*)
 134,135&(asd,cuccli,(dunno)&yay,(umm&stuffs))
+134

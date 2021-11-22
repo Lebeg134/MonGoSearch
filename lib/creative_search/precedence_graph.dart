@@ -30,7 +30,14 @@ String getOperandLongName(Operands operand){
   }
 }
 int globalID = 0;
-Map<Node, String> nodeNames = { Node.Id(134):"Made by Lebeg134"};
+/// Negative node Ids are reserved for status codes
+/// Range 200-299 success:
+/// -201 = Made by Lebeg134
+/// -204 = Cleared
+Map<Node, String> nodeNames = {
+  Node.Id(-201):"Made by Lebeg134",
+  Node.Id(-204): "Cleared",
+};
 abstract class PrecedenceNode{
   Node node;
   PrecedenceNode? parent;
@@ -47,6 +54,36 @@ abstract class PrecedenceNode{
   void register(PrecedenceNode precedenceNode){
     children.add(precedenceNode);
     precedenceNode.parent = this;
+  }
+  /// Returning null means node can be removed from parent
+  PrecedenceNode? compact(){
+    if (isEnd()) return this;
+    if (!isEnd() && children.isEmpty) return null;
+    PrecedenceNode end = this;
+    while(end.children.length == 1){
+      end = end.children[0];
+    }
+    if (end!= this){
+      if(end.isEnd() || end.children.isNotEmpty){
+        return end;
+      }
+    }
+    List<PrecedenceNode> newChildren = [];
+    for(PrecedenceNode child in children){
+      var newChild = child.compact();
+      if (newChild != null){
+        newChildren.add(newChild);
+      }
+    }
+    children = newChildren;
+    return this;
+  }
+  bool isEnd();
+  void removeFromParent(){
+    if (parent != null){
+      parent!.children.remove(this);
+      parent = null;
+    }
   }
 }
 class PrecedenceLeaf extends PrecedenceNode{
@@ -81,6 +118,11 @@ class PrecedenceLeaf extends PrecedenceNode{
   @override
   void debugPrint() {
     print("|Leaf:"+content);
+  }
+
+  @override
+  bool isEnd() {
+    return true;
   }
 }
 class OperandNode extends PrecedenceNode{
@@ -141,6 +183,10 @@ class OperandNode extends PrecedenceNode{
   void debugPrint() {
     print("|OperandNode:"+getOperandLongName(operand));
   }
+  @override
+  bool isEnd() {
+    return false;
+  }
 }
 class PrecedenceGraph{
   PrecedenceNode? root;
@@ -159,6 +205,7 @@ class PrecedenceGraph{
         root = PGraphGenerator.generateFromString(string.characters);
       }
     }
+    compact();
   }
   void addRoot(PrecedenceNode root){
     this.root = root;
@@ -170,11 +217,14 @@ class PrecedenceGraph{
   }
   Graph toGraph(){
     final Graph graph = Graph()..isTree = true;
-    root?.addToGraph(graph);
+    root!.addToGraph(graph);
+    if (graph.nodes.isEmpty){
+      graph.addNode(Node.Id(-201));
+    }
     return graph;
   }
   void compact(){
-
+    root?.compact();
   }
 }
 class PGraphGenerator{
