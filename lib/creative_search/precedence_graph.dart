@@ -247,22 +247,6 @@ class PrecedenceGraph{
     return graph;
   }
   void compact(){
-    /*if (root!= null){
-      OperandNode ancestor = OperandNode.empty(Operands.and);
-      ancestor.register(root!);
-      ancestor.compact();
-      if (ancestor.children.isEmpty){
-        root = PrecedenceLeaf.foster("Please specify some tags");
-      }
-      else if (root != ancestor.children.first){
-        if (debugLevel > 0) print("Moved root!");
-        root = ancestor.children.first;
-      }
-    }
-    else{
-      if (debugLevel > 0) print("Root null");
-      root = PrecedenceLeaf.foster("Error: root null");
-    }*/
     root?.compact();
   }
 }
