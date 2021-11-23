@@ -169,6 +169,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       Text(
                         _text,
                         style: Theme.of(context).textTheme.headline4,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       if (_text.isNotEmpty &&
                           DebugData.getDebugLevel()<=1 &&
