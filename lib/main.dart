@@ -39,14 +39,32 @@ class _MyHomePageState extends State<MyHomePage> {
   final myController = TextEditingController();
 
   void _clear() {
+    _turnOffDebugMode();
     setState(() {
       _text = r"¯\_(ツ)_/¯";
       precedenceGraph = null;
       graph = Graph()..isTree = true;
       graph.nodes.add(Node.Id(-204));
-      DebugData.setDebugLevel(0);
-      tapTimes = 0;
+      myController.clear();
     });
+  }
+
+
+  void _turnOnDebugMode(){
+    setState(() {
+      debugMode = true;
+      DebugData.setDebugLevel(2);
+    });
+    _onPressed();
+  }
+
+  void _turnOffDebugMode(){
+    setState(() {
+      debugMode = false;
+      tapTimes = 0;
+      DebugData.setDebugLevel(0);
+    });
+    _onPressed();
   }
 
   void _textSubmitted(String value) {
@@ -68,24 +86,13 @@ class _MyHomePageState extends State<MyHomePage> {
     if (tapTimes > 8){
       if (tapTimes >= 12){
         final SnackBar debug = SnackBar(
-          content: const Text("Debug mode activated! Press clear to turn off"),
+          content: const Text("Debug mode activated!"),
           action: SnackBarAction(
             label: "Turn off",
-            onPressed: (){
-              setState(() {
-                DebugData.setDebugLevel(0);
-                debugMode = false;
-                tapTimes = 0;
-                _onPressed();
-              });
-            },
+            onPressed: _turnOffDebugMode,
           ),
         );
-        setState(() {
-          debugMode = true;
-          DebugData.setDebugLevel(2);
-          _onPressed();
-        });
+        _turnOnDebugMode();
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(debug);
@@ -155,6 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               ],
                             ),
                       ),
+
                       const Text(
                         'Copy this to Pokemon Go:',
                       ),
@@ -162,7 +170,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         _text,
                         style: Theme.of(context).textTheme.headline4,
                       ),
-                      if (_text.isNotEmpty)
+                      if (_text.isNotEmpty &&
+                          DebugData.getDebugLevel()<=1 &&
+                          _text!=r"¯\_(ツ)_/¯")
                         Container(
                           height: 42,
                           constraints: const BoxConstraints(maxWidth: 250),
@@ -188,7 +198,59 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ),
                                 ),
                               ),
-                        )
+                        ),
+                      if(debugMode)
+                        const Divider(),
+                      if(debugMode)
+                        Container(
+                            height: 32,
+                            constraints: const BoxConstraints(maxWidth: 350),
+                            child:
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[
+                                  const Flexible(
+                                      flex: 2,
+                                      child:Text(
+                                        "debugLevel",
+                                        textAlign: TextAlign.center,
+                                      )
+                                  ),
+                                  Flexible(
+                                    flex: 1,
+                                    child:
+                                    DropdownButton<int>(
+                                      value: DebugData.getDebugLevel(),
+                                      icon: const Icon(Icons.arrow_downward),
+                                      iconSize: 32,
+                                      onChanged: (int? newValue) {
+                                        setState(() {
+                                          DebugData.setDebugLevel(newValue??2);
+                                          _onPressed();
+                                        });
+                                      },
+                                      items:<int>[1,2,3].map<DropdownMenuItem<int>>((int level){
+                                        return DropdownMenuItem<int>(
+                                            value: level,
+                                            child: Text("$level"));
+                                      }).toList(),
+                                    ),
+                                  ),
+                                  Flexible(
+                                      flex: 4,
+                                      child: SizedBox.expand(
+                                        child:
+                                        ElevatedButton(
+                                            onPressed: _turnOffDebugMode,
+                                            child: const Text(
+                                                "Turn off debug mode"
+                                            )
+                                        ),
+                                      )
+                                  ),
+                                ]
+                            )
+                        ),
                     ],
                 ),
               ],
@@ -202,7 +264,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   maxScale: 5.6,
                   child: GraphView(
                     graph: graph,
-                    algorithm: BuchheimWalkerAlgorithm(builder, TreeEdgeRenderer(builder)),
+                    algorithm: BuchheimWalkerAlgorithm(builder,
+                        TreeEdgeRenderer(builder)),
                     paint: Paint()
                       ..color = Colors.green
                       ..strokeWidth = 1

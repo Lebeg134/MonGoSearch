@@ -12,6 +12,9 @@ class DebugData{
   static void setDebugLevel(int level){
     debugLevel = level;
   }
+  static int getDebugLevel(){
+    return debugLevel;
+  }
 }
 int debugLevel = 0;
 const String orChar = ',';
@@ -164,7 +167,8 @@ class OperandNode extends PrecedenceNode{
     bool simple = true;
 
     // TODO REDO again (3rd time)
-    /*for (PrecedenceNode node in children){
+
+    for (PrecedenceNode node in children){
       if (!(node is OperandNode && node.operand == Operands.and)){
         string += node.getString();
         string += orChar;
@@ -178,25 +182,25 @@ class OperandNode extends PrecedenceNode{
     }
     String modifier = string;
     string = "";
-    Set<String> allTags = {};
+
+
+    Set<Set<String>> allTags = {};
     for (PrecedenceNode node in children){
       if (node is OperandNode && node.operand == Operands.and){
-        allTags.add(node.getString());
+        node.getString().split(andSepPattern).toSet().forEach((element) {
+          allTags.add(element.split(orSepPattern).toSet());
+        });
       }
     }
-    for (String tag in allTags){
-      string += modifier;
-      Iterable<String> currentTags = allTags.where((element) => element!=tag);
-      for (String currentTag in currentTags){
-        string += currentTag;
-        if (currentTag != currentTags.last){
-          string += orChar;
-        }
+    if (debugLevel > 0){
+      int i = 0;
+      for(Set<String> slots in allTags){
+        print("slot$i");
+        print(slots.toString());
+        i++;
       }
-      if (tag != allTags.last){
-        string+= andChar;
-      }
-    }*/
+    }
+
     return string;
   }
   String _stringAsAnd(){
@@ -222,10 +226,10 @@ class OperandNode extends PrecedenceNode{
     Color edgeColor = Colors.black;
     switch (operand){
       case Operands.and:
-        edgeColor = Colors.indigo;
+        edgeColor = Colors.green;
         break;
       case Operands.or:
-        edgeColor = Colors.deepOrange;
+        edgeColor = Colors.red;
         break;
     }
     graph.addNode(node);
@@ -313,7 +317,7 @@ class PrecedenceGraph{
     this.root = root;
   }
   String buildString(){
-    if (debugLevel >=2) return "Clear to turn off Debug mode";
+    if (debugLevel >=2) return "Disabled in debugLevel > 1";
     String? output = root?.getString();
     output ??= "Error";
     return PGraphGenerator.simplifyResult(output);
