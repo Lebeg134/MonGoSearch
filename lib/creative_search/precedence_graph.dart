@@ -180,8 +180,6 @@ class OperandNode extends PrecedenceNode{
       return string.characters.getRange(0,string.length-1).string;
     }
 
-    String modifier = string;
-    string = "";
     Set<Set<String>> allTags = {};
     for (PrecedenceNode node in children){
       if (node is OperandNode && node.operand == Operands.and){
@@ -196,11 +194,9 @@ class OperandNode extends PrecedenceNode{
         i++;
       }
     }
-
-
-
-
-    return string;
+    String output = SearchStringHelper.getRecursiveMethod(allTags, string);
+    if (debugLevel > 0) print(output);
+    return output;
   }
   String _stringAsAnd(){
     String string = "";
