@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
+import 'precedence_graph_generator.dart';
+import 'search_string_helper.dart';
 
 class DebugData{
   /// debugLevel
