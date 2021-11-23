@@ -13,7 +13,7 @@ class DebugData{
     debugLevel = level;
   }
 }
-int debugLevel = 2;
+int debugLevel = 0;
 const String orChar = ',';
 const String andChar = '&';
 const orSepString = "(:|,|;)";
@@ -147,37 +147,64 @@ class OperandNode extends PrecedenceNode{
     }
   }
   OperandNode.empty(Operands operand):this(operand, null, null);
+
   @override
-  String getString(){
+  String getString() {
     if (children.isEmpty) return "";
-    String string = "";
-    String modifier = "";
-    String sep;
     switch(operand){
       case Operands.or:
-        sep = orChar;
-        break;
+        return _stringAsOr();
       case Operands.and:
-        if (parent != null){
-          OperandNode pr = parent as OperandNode;
-          if (pr.operand == Operands.or){
-            for (PrecedenceNode node in parent!.children){
-              if (node == this) continue;
-              if (node is PrecedenceLeaf ||
-                  (node is OperandNode && node.operand == Operands.or)){
-                modifier += node.getString() + ",";
-              }
-            }
-          }
-        }
-        sep = andChar;
-        break;
+        return _stringAsAnd();
     }
-    // Needs Rework!!
+  }
+  String _stringAsOr(){
+    if (children.isEmpty) return "";
+    String string = "";
+    bool simple = true;
+
+    // TODO REDO again (3rd time)
+    /*for (PrecedenceNode node in children){
+      if (!(node is OperandNode && node.operand == Operands.and)){
+        string += node.getString();
+        string += orChar;
+      }
+      else{
+        simple = false;
+      }
+    }
+    if (simple){
+      return string.characters.getRange(0,string.length-1).string;
+    }
+    String modifier = string;
+    string = "";
+    Set<String> allTags = {};
     for (PrecedenceNode node in children){
-      string += modifier + node.getString();
+      if (node is OperandNode && node.operand == Operands.and){
+        allTags.add(node.getString());
+      }
+    }
+    for (String tag in allTags){
+      string += modifier;
+      Iterable<String> currentTags = allTags.where((element) => element!=tag);
+      for (String currentTag in currentTags){
+        string += currentTag;
+        if (currentTag != currentTags.last){
+          string += orChar;
+        }
+      }
+      if (tag != allTags.last){
+        string+= andChar;
+      }
+    }*/
+    return string;
+  }
+  String _stringAsAnd(){
+    String string = "";
+    for (PrecedenceNode node in children){
+      string += node.getString();
       if(node != children.last){
-        string += sep;
+        string += andChar;
       }
     }
     return string;
@@ -217,7 +244,7 @@ class OperandNode extends PrecedenceNode{
   }
   @override
   PrecedenceNode? compact() {
-    super.compact(); // beacause of debug print
+    super.compact(); // because of debug print
     if (debugLevel >=3 ) return this;
     if (children.isEmpty) return null;
     PrecedenceNode end = this;
@@ -233,7 +260,7 @@ class OperandNode extends PrecedenceNode{
     if (end!= this){
       if (debugLevel >0 ){
         int num = end.node.key!.value;
-        print("Shortcut to node{$num}!");
+        print("Shortcut to node$num!");
       }
       if(end.isEnd() || end.children.isNotEmpty){
         end.compact();
@@ -257,8 +284,8 @@ class OperandNode extends PrecedenceNode{
 
     if (newChildren.isEmpty) return null;
     children.clear();
-    for (PrecedenceNode newchild in newChildren){
-      register(newchild);
+    for (PrecedenceNode newChild in newChildren){
+      register(newChild);
     }
     return this;
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mon_go_search/creative_search/precedence_graph.dart';
 import 'package:graphview/GraphView.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,6 +34,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _text ="";
+  bool debugMode = false;
   PrecedenceGraph? precedenceGraph;
   final myController = TextEditingController();
 
@@ -72,12 +74,15 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: (){
               setState(() {
                 DebugData.setDebugLevel(0);
+                debugMode = false;
                 tapTimes = 0;
+                _onPressed();
               });
             },
           ),
         );
         setState(() {
+          debugMode = true;
           DebugData.setDebugLevel(2);
           _onPressed();
         });
@@ -88,7 +93,6 @@ class _MyHomePageState extends State<MyHomePage> {
       else{
         final SnackBar message = SnackBar(
           content: Text("Debug in: ${12-tapTimes}"),
-          //duration: const Duration(milliseconds: 250),
         );
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -158,6 +162,33 @@ class _MyHomePageState extends State<MyHomePage> {
                         _text,
                         style: Theme.of(context).textTheme.headline4,
                       ),
+                      if (_text.isNotEmpty)
+                        Container(
+                          height: 42,
+                          constraints: const BoxConstraints(maxWidth: 250),
+                          child:
+                              SizedBox.expand(
+                                child:
+                                ElevatedButton(
+                                  onPressed: (){
+                                    Clipboard.setData(ClipboardData(text: _text));
+                                    ScaffoldMessenger.of(context)
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(
+                                          SnackBar(
+                                            content: Text("Copied \""
+                                                "${_text.characters.take(10)}"
+                                                "${_text.length>10 ? "...": "" }"
+                                                "\" to clipboard!"),
+                                          )
+                                      );
+                                  },
+                                  child: const Text(
+                                    "Copy",
+                                  ),
+                                ),
+                              ),
+                        )
                     ],
                 ),
               ],
