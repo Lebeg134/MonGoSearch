@@ -14,7 +14,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'MonGo Search',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.orange,
+        highlightColor: Colors.lightGreen,
       ),
       home: const MyHomePage(title: 'MonGo Creative Search'),
     );
@@ -41,7 +42,59 @@ class _MyHomePageState extends State<MyHomePage> {
       precedenceGraph = null;
       graph = Graph()..isTree = true;
       graph.nodes.add(Node.Id(-204));
+      DebugData.setDebugLevel(0);
+      tapTimes = 0;
     });
+  }
+
+  void _textSubmitted(String value) {
+    setState(() {
+      precedenceGraph = PrecedenceGraph.fromString(value);
+      _text = precedenceGraph?.buildString()??"Error";
+      graph = precedenceGraph!.toGraph();
+    });
+  }
+
+  void _onPressed() {
+    _textSubmitted(myController.text);
+  }
+
+  /// 12 turns on Debug mode
+  int tapTimes = 0;
+  void _nodeTapped() {
+    tapTimes++;
+    if (tapTimes > 8){
+      if (tapTimes >= 12){
+        final SnackBar debug = SnackBar(
+          content: const Text("Debug mode activated! Press clear to turn off"),
+          action: SnackBarAction(
+            label: "Turn off",
+            onPressed: (){
+              setState(() {
+                DebugData.setDebugLevel(0);
+                tapTimes = 0;
+              });
+            },
+          ),
+        );
+        setState(() {
+          DebugData.setDebugLevel(2);
+          _onPressed();
+        });
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(debug);
+      }
+      else{
+        final SnackBar message = SnackBar(
+          content: Text("Debug in: ${12-tapTimes}"),
+          //duration: const Duration(milliseconds: 250),
+        );
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(message);
+      }
+    }
   }
 
   @override
@@ -109,6 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
+            const Divider(),
             Expanded(
               child: InteractiveViewer(
                   constrained: false,
@@ -123,11 +177,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       ..strokeWidth = 1
                       ..style = PaintingStyle.stroke,
                     builder: (Node node) {
-                      // I can decide what widget should be shown here based on the id
                       return rectangleWidget(nodeNames[node]??"Error");
                     },
                   )),
             ),
+
           ],
         ),
       ),
@@ -150,20 +204,12 @@ class _MyHomePageState extends State<MyHomePage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(4),
             boxShadow: const [
-              BoxShadow(color: Colors.blue, spreadRadius: 1),
+              BoxShadow(color: Colors.orange, spreadRadius: 1),
             ],
           ),
           child: Text(text)
       ),
     );
-  }
-
-  void _textSubmitted(String value) {
-    setState(() {
-      precedenceGraph = PrecedenceGraph.fromString(value);
-      _text = precedenceGraph?.buildString()??"Error";
-      graph = precedenceGraph!.toGraph();
-    });
   }
 
   @override
@@ -172,18 +218,12 @@ class _MyHomePageState extends State<MyHomePage> {
     graph = Graph()..isTree = true;
     graph.addNode(Node.Id(-201));
 
+
     builder
       ..siblingSeparation = (100)
       ..levelSeparation = (150)
       ..subtreeSeparation = (150)
       ..orientation = (BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM);
-  }
 
-  void _onPressed() {
-    _textSubmitted(myController.text);
-  }
-
-  void _nodeTapped() {
-    // Do nothing atm
   }
 }

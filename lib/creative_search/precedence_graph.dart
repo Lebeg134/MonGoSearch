@@ -2,12 +2,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 
-/// debugLevel
-/// 0 - off
-/// 1 - print data
-/// 2 - don't generate string
-/// 3 - don't compact
-const int debugLevel = 2;
+
+class DebugData{
+  /// debugLevel
+  /// 0 - off
+  /// 1 - print data
+  /// 2 - don't generate string
+  /// 3 - don't compact
+  static void setDebugLevel(int level){
+    debugLevel = level;
+  }
+}
+int debugLevel = 2;
 const String orChar = ',';
 const String andChar = '&';
 const orSepString = "(:|,|;)";
@@ -276,7 +282,7 @@ class PrecedenceGraph{
     this.root = root;
   }
   String buildString(){
-    if (debugLevel >=2) return "Disabled";
+    if (debugLevel >=2) return "Clear to turn off Debug mode";
     String? output = root?.getString();
     output ??= "Error";
     return PGraphGenerator.simplifyResult(output);
