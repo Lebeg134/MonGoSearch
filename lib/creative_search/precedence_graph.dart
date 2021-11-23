@@ -303,7 +303,7 @@ class PrecedenceGraph{
         root = PrecedenceLeaf.foster("Check your brackets!");
       }
       else{
-        root = PGraphGenerator.generateFromString(string.characters);
+        root = PGraphGenerator.generateFromString(string.characters.string);
       }
     }
     compact();

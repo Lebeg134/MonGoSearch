@@ -5,47 +5,50 @@ import 'search_string_helper.dart';
 class PGraphGenerator{
   static bool checkValidity(String input){
     String string = input.replaceAll(" ", "");
-    return SearchStringHelper.getBalance(string)==0 && !string.contains(bracketPatterns);
+    return SearchStringHelper.getBalance(string)==0 &&
+        !string.contains(bracketPatterns);
   }
-  static PrecedenceNode generateFromString(Characters characters){
+  static PrecedenceNode generateFromString(String searchString){
+    Characters characters = (andChar+searchString).characters;
     if (debugLevel > 0) print("generating from: "+characters.string);
     if (characters.isEmpty) return simpleGenerate(""); //ends of recursion
     if (!characters.contains("(")) return simpleGenerate(characters.string);
     int? openLB;
-    int? closeRB;
+    int lastRB = 0;
     int depth= 0;
+    Operands opType;
+    PrecedenceNode root = simpleGenerate("");
     for (int i = 0 ; i<characters.length ; i++){
       if ( characters.elementAt(i) == '('){
-        openLB??=i;
+        if (openLB==null){
+          openLB = i;
+          opType = opFromString(characters.elementAt(lastRB-1));
+          if (debugLevel > 0) print("Simple from ${lastRB+1} to $i");
+          registerToAndRoot(root,
+              simpleGenerate(characters.getRange(lastRB+1, openLB).string)
+              ,opType);
+        }
         depth++;
       }
       if( characters.elementAt(i) == ')'){
         depth--;
       }
       if (openLB != null && depth == 0){
-        closeRB??= i;
+        lastRB = i;
+        opType = opFromString(characters.elementAt(openLB-1));
+        if (debugLevel > 0) print("Generate() from ${openLB+1} to $lastRB");
+        registerToAndRoot(root,
+            generateFromString(characters.getRange(openLB+1, lastRB).string)
+            ,opType);
+        openLB = null;
       }
     }
-
-    openLB??= characters.length-1;
-    closeRB??= characters.length-1;
-    if (debugLevel > 0) print("generating root:");
-    PrecedenceNode root = simpleGenerate(characters.getRange(0, openLB).string);
-    if (debugLevel > 0) print("generating middle: openLB: {$openLB} closeRB:{$closeRB}");
-    PrecedenceNode middle = generateFromString(characters.getRange(openLB+1, closeRB));
-    Operands opType;
-    if (openLB <= 0){
-      root.children.first.register(middle);
-    }
-    else{
-      opType = opFromString(characters.elementAt(openLB-1));
-      registerToAndRoot(root, middle, opType);
-    }
-    if (closeRB != characters.length-1){
-      if (debugLevel > 0) print("generating tail:");
-      opType = opFromString(characters.elementAt(closeRB+1));
-      PrecedenceNode tail = generateFromString(characters.getRange(closeRB+1, characters.length));
-      registerToAndRoot(root, tail, opType);
+    if (lastRB != characters.length-1){
+      if (debugLevel > 0) print("Simple tail from ${lastRB+1} to ${characters.length}");
+      opType = opFromString(characters.elementAt(lastRB+1));
+      registerToAndRoot(root,
+          simpleGenerate(characters.getRange(lastRB+1, characters.length).string),
+          opType);
     }
     return root;
   }
