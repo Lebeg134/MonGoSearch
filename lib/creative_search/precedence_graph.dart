@@ -163,13 +163,17 @@ class OperandNode extends PrecedenceNode{
           if (pr.operand == Operands.or){
             for (PrecedenceNode node in parent!.children){
               if (node == this) continue;
-              modifier += node.getString() + ",";
+              if (node is PrecedenceLeaf ||
+                  (node is OperandNode && node.operand == Operands.or)){
+                modifier += node.getString() + ",";
+              }
             }
           }
         }
         sep = andChar;
         break;
     }
+    // Needs Rework!!
     for (PrecedenceNode node in children){
       string += modifier + node.getString();
       if(node != children.last){
