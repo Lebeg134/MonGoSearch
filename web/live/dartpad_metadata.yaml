@@ -4,4 +4,4 @@ files:
   - name: main.dart
   - name: precedence_graph.dart
   - name: precedence_graph_generator.dart
-  - name: search_string_helper
+  - name: search_string_helper.dart
