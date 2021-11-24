@@ -9,10 +9,16 @@
 
 
 
-151,celebi&
 151,celebi,murkrow,Shinx&
 151,celebi,murkrow,shiny&
 151,celebi,murkrow,2*,3*&
-151,celebi,lucky,shiny,Shinx&
+151,celebi,lucky,shiny,Shinx& #
 151,celebi,lucky,shiny&
-151,celebi,lucky,shiny,2*,3*
+151,celebi,lucky,shiny,2*,3*  #
+
+Could be optimized to:
+151,celebi,murkrow,Shinx&
+151,celebi,murkrow,shiny&
+151,celebi,murkrow,2*,3*&
+151,celebi,lucky,shiny&
+
