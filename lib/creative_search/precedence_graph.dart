@@ -22,7 +22,7 @@ const String orChar = ',';
 const String andChar = '&';
 const orSepString = "(:|,|;)";
 const andSepString = "&";
-const allValidCharacters = ",:;&";
+const allValidCharacters = ",:;&|";
 Pattern orSepPattern = RegExp(orSepString);
 Pattern andSepPattern = RegExp(andSepString);
 Pattern bracketPatterns = RegExp(r"\)[^"+allValidCharacters+r")]|"
@@ -183,7 +183,8 @@ class OperandNode extends PrecedenceNode{
     Set<Set<String>> allTags = {};
     for (PrecedenceNode node in children){
       if (node is OperandNode && node.operand == Operands.and){
-        allTags.add(node.getString().split(andSepPattern).toSet());
+        allTags.add(SearchStringHelper.simplifyResult(node.getString())
+            .split(andSepPattern).toSet());
       }
     }
     if (debugLevel > 0){
@@ -299,7 +300,7 @@ class PrecedenceGraph{
       root = PGraphGenerator.simpleGenerate(string);
     }
     else{
-      if (!PGraphGenerator.checkValidity(string)){
+      if (!SearchStringHelper.checkValidity(string)){
         root = PrecedenceLeaf.foster("Check your brackets!");
       }
       else{

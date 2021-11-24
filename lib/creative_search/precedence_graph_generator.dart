@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import 'precedence_graph.dart';
-import 'search_string_helper.dart';
 
 class PGraphGenerator{
-  static bool checkValidity(String input){
-    String string = input.replaceAll(" ", "");
-    return SearchStringHelper.getBalance(string)==0 &&
-        !string.contains(bracketPatterns);
-  }
   static PrecedenceNode generateFromString(String searchString){
     Characters characters = (andChar+searchString).characters;
     if (debugLevel > 0) print("generating from: "+characters.string);
     if (characters.isEmpty) return simpleGenerate(""); //ends of recursion
     if (!characters.contains("(")) return simpleGenerate(characters.string);
     int? openLB;
-    int lastRB = 0;
+    int lastRB = -1;
     int depth= 0;
     Operands opType;
     PrecedenceNode root = simpleGenerate("");
@@ -22,8 +16,8 @@ class PGraphGenerator{
       if ( characters.elementAt(i) == '('){
         if (openLB==null){
           openLB = i;
-          opType = opFromString(characters.elementAt(lastRB-1));
-          if (debugLevel > 0) print("Simple from ${lastRB+1} to $i");
+          opType = opFromString(characters.elementAt(lastRB+1));
+          if (debugLevel > 0) print("Simple from ${lastRB+2} to $i");
           registerToAndRoot(root,
               simpleGenerate(characters.getRange(lastRB+1, openLB).string)
               ,opType);

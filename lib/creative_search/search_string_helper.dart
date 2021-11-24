@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'precedence_graph.dart';
 
 class SearchStringHelper{
+  static bool checkValidity(String input){
+    String string = input.replaceAll(" ", "");
+    return SearchStringHelper.getBalance(string)==0 &&
+        !string.contains(bracketPatterns);
+  }
   static String simplifyResult(String input){
     if (debugLevel > 0) print("Simplify: "+input);
     Set<String> ands = input.split(andSepPattern).toSet();
