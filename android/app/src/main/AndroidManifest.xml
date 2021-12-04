@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="hu.Lebeg134.mon_go_search">
    <application
-        android:label="mon_go_search"
+        android:label="MonGo"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

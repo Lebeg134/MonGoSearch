@@ -124,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Text(
-                        "You can use brackets! () :D",
+                        "You can use brackets()!",
                         style: Theme.of(context).textTheme.headline4,
                       ),
                       Container(
@@ -135,7 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: <Widget>[
                                 Flexible(
-                                  flex: 4,
+                                  flex: 3,
                                   child:
                                   TextField(
                                     decoration: const InputDecoration(
