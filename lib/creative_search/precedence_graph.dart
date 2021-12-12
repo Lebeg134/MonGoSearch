@@ -295,7 +295,7 @@ class PrecedenceGraph{
   PrecedenceGraph(this.root);
   PrecedenceGraph.fromString(String string){
     globalID = 0;
-    string = string.replaceAll(" ", "");
+    //string = string.replaceAll(" ", "");
     if (!string.contains('(')){
       root = PGraphGenerator.simpleGenerate(string);
     }
