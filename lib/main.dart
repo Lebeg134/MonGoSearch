@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _text ="";
+  String _text ="converted form will show here";
   bool debugMode = false;
   PrecedenceGraph? precedenceGraph;
   final myController = TextEditingController();
@@ -123,9 +123,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text(
-                        "You can use brackets()!",
-                        style: Theme.of(context).textTheme.headline4,
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          "You can use brackets()!",
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
                       ),
                       Container(
                         height: 69,
@@ -137,25 +140,32 @@ class _MyHomePageState extends State<MyHomePage> {
                                 Flexible(
                                   flex: 3,
                                   child:
-                                  TextField(
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      hintText: "Desired pokemon search string",
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: TextField(
+                                      decoration: const InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        hintText: "Desired pokemon search string",
+                                      ),
+                                      onSubmitted: _textSubmitted,
+                                      controller: myController,
+
                                     ),
-                                    onSubmitted: _textSubmitted,
-                                    controller: myController,
                                   ),
                                 ),
                                 Flexible(
                                   flex: 1,
                                   child:
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      minimumSize: const Size.fromHeight(58),
-                                    ),
-                                    onPressed: _onPressed,
-                                    child: const Text(
-                                      "Convert!",
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        minimumSize: const Size.fromHeight(58),
+                                      ),
+                                      onPressed: _onPressed,
+                                      child: const Text(
+                                        "Convert!",
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -166,11 +176,16 @@ class _MyHomePageState extends State<MyHomePage> {
                       const Text(
                         'Copy this to Pokemon Go:',
                       ),
-                      Text(
-                        _text,
-                        style: Theme.of(context).textTheme.headline4,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          height: 69,
+                          constraints: const BoxConstraints(maxWidth: 750),
+                          child: SelectableText(
+                              _text,
+                              style: Theme.of(context).textTheme.headlineMedium
+                          )
+                        ),
                       ),
                       if (_text.isNotEmpty &&
                           DebugData.getDebugLevel()<=1 &&

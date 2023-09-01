@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 import 'precedence_graph_generator.dart';
@@ -21,10 +20,12 @@ int debugLevel = 0;
 const String orChar = ',';
 const String andChar = '&';
 const orSepString = "(:|,|;)";
-const andSepString = "&";
-const allValidCharacters = ",:;&|";
+const andSepString = '&';
+const notSepString = '!';
+const allValidCharacters = ",:;&|!";
 Pattern orSepPattern = RegExp(orSepString);
 Pattern andSepPattern = RegExp(andSepString);
+Pattern notSepPattern = RegExp(notSepString);
 Pattern bracketPatterns = RegExp(r"\)[^"+allValidCharacters+r")]|"
                                    r"[^"+allValidCharacters+r"(]\(");
 enum Operands {or, and}
@@ -84,6 +85,7 @@ abstract class PrecedenceNode{
     }
     if (debugLevel >=3 ) return this;
     if (isEnd()) return this;
+    return null;
   }
   bool isEnd();
   void removeFromParent(){
