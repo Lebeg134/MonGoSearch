@@ -179,11 +179,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Container(
-                          height: 69,
+                          color: const Color(0x88888888),
                           constraints: const BoxConstraints(maxWidth: 750),
                           child: SelectableText(
                               _text,
-                              style: Theme.of(context).textTheme.headlineMedium
+                              style: Theme.of(context).textTheme.headlineMedium,
+                              textAlign: TextAlign.center
                           )
                         ),
                       ),
