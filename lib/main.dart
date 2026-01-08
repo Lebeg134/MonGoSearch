@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _text ="";
+  String _text = "";
   bool debugMode = false;
   PrecedenceGraph? precedenceGraph;
   final myController = TextEditingController();
@@ -49,8 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-
-  void _turnOnDebugMode(){
+  void _turnOnDebugMode() {
     setState(() {
       debugMode = true;
       DebugData.setDebugLevel(2);
@@ -58,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _onPressed();
   }
 
-  void _turnOffDebugMode(){
+  void _turnOffDebugMode() {
     setState(() {
       debugMode = false;
       tapTimes = 0;
@@ -70,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _textSubmitted(String value) {
     setState(() {
       precedenceGraph = PrecedenceGraph.fromString(value);
-      _text = precedenceGraph?.buildString()??"Error";
+      _text = precedenceGraph?.buildString() ?? "Error";
       graph = precedenceGraph!.toGraph();
     });
   }
@@ -83,8 +82,8 @@ class _MyHomePageState extends State<MyHomePage> {
   int tapTimes = 0;
   void _nodeTapped() {
     tapTimes++;
-    if (tapTimes > 8){
-      if (tapTimes >= 12){
+    if (tapTimes > 8) {
+      if (tapTimes >= 12) {
         final SnackBar debug = SnackBar(
           content: const Text("Debug mode activated!"),
           action: SnackBarAction(
@@ -96,10 +95,9 @@ class _MyHomePageState extends State<MyHomePage> {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(debug);
-      }
-      else{
+      } else {
         final SnackBar message = SnackBar(
-          content: Text("Debug in: ${12-tapTimes}"),
+          content: Text("Debug in: ${12 - tapTimes}"),
         );
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -122,138 +120,123 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text(
-                        "You can use brackets()!",
-                        style: Theme.of(context).textTheme.headline4,
+                  children: <Widget>[
+                    Text(
+                      "You can use brackets()!",
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    Container(
+                      height: 69,
+                      constraints: const BoxConstraints(maxWidth: 750),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          Flexible(
+                            flex: 3,
+                            child: TextField(
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                hintText: "Desired pokemon search string",
+                              ),
+                              onSubmitted: _textSubmitted,
+                              controller: myController,
+                            ),
+                          ),
+                          Flexible(
+                            flex: 1,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(58),
+                              ),
+                              onPressed: _onPressed,
+                              child: const Text(
+                                "Convert!",
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    const Text(
+                      'Copy this to Pokemon Go:',
+                    ),
+                    Text(
+                      _text,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (_text.isNotEmpty &&
+                        DebugData.getDebugLevel() <= 1 &&
+                        _text != r"¯\_(ツ)_/¯")
                       Container(
-                        height: 69,
-                        constraints: const BoxConstraints(maxWidth: 750),
-                        child:
-                            Row(
+                        height: 42,
+                        constraints: const BoxConstraints(maxWidth: 250),
+                        child: SizedBox.expand(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: _text));
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(SnackBar(
+                                  content: Text("Copied \""
+                                      "${_text.characters.take(10)}"
+                                      "${_text.length > 10 ? "..." : ""}"
+                                      "\" to clipboard!"),
+                                ));
+                            },
+                            child: const Text(
+                              "Copy",
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (debugMode) const Divider(),
+                    if (debugMode)
+                      Container(
+                          height: 32,
+                          constraints: const BoxConstraints(maxWidth: 350),
+                          child: Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: <Widget>[
-                                Flexible(
-                                  flex: 3,
-                                  child:
-                                  TextField(
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      hintText: "Desired pokemon search string",
-                                    ),
-                                    onSubmitted: _textSubmitted,
-                                    controller: myController,
-                                  ),
-                                ),
+                                const Flexible(
+                                    flex: 2,
+                                    child: Text(
+                                      "debugLevel",
+                                      textAlign: TextAlign.center,
+                                    )),
                                 Flexible(
                                   flex: 1,
-                                  child:
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      minimumSize: const Size.fromHeight(58),
-                                    ),
-                                    onPressed: _onPressed,
-                                    child: const Text(
-                                      "Convert!",
-                                    ),
+                                  child: DropdownButton<int>(
+                                    value: DebugData.getDebugLevel(),
+                                    icon: const Icon(Icons.arrow_downward),
+                                    iconSize: 32,
+                                    onChanged: (int? newValue) {
+                                      setState(() {
+                                        DebugData.setDebugLevel(newValue ?? 2);
+                                        _onPressed();
+                                      });
+                                    },
+                                    items: <int>[
+                                      1,
+                                      2,
+                                      3
+                                    ].map<DropdownMenuItem<int>>((int level) {
+                                      return DropdownMenuItem<int>(
+                                          value: level, child: Text("$level"));
+                                    }).toList(),
                                   ),
                                 ),
-                              ],
-                            ),
-                      ),
-
-                      const Text(
-                        'Copy this to Pokemon Go:',
-                      ),
-                      Text(
-                        _text,
-                        style: Theme.of(context).textTheme.headline4,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (_text.isNotEmpty &&
-                          DebugData.getDebugLevel()<=1 &&
-                          _text!=r"¯\_(ツ)_/¯")
-                        Container(
-                          height: 42,
-                          constraints: const BoxConstraints(maxWidth: 250),
-                          child:
-                              SizedBox.expand(
-                                child:
-                                ElevatedButton(
-                                  onPressed: (){
-                                    Clipboard.setData(ClipboardData(text: _text));
-                                    ScaffoldMessenger.of(context)
-                                      ..hideCurrentSnackBar()
-                                      ..showSnackBar(
-                                          SnackBar(
-                                            content: Text("Copied \""
-                                                "${_text.characters.take(10)}"
-                                                "${_text.length>10 ? "...": "" }"
-                                                "\" to clipboard!"),
-                                          )
-                                      );
-                                  },
-                                  child: const Text(
-                                    "Copy",
-                                  ),
-                                ),
-                              ),
-                        ),
-                      if(debugMode)
-                        const Divider(),
-                      if(debugMode)
-                        Container(
-                            height: 32,
-                            constraints: const BoxConstraints(maxWidth: 350),
-                            child:
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[
-                                  const Flexible(
-                                      flex: 2,
-                                      child:Text(
-                                        "debugLevel",
-                                        textAlign: TextAlign.center,
-                                      )
-                                  ),
-                                  Flexible(
-                                    flex: 1,
-                                    child:
-                                    DropdownButton<int>(
-                                      value: DebugData.getDebugLevel(),
-                                      icon: const Icon(Icons.arrow_downward),
-                                      iconSize: 32,
-                                      onChanged: (int? newValue) {
-                                        setState(() {
-                                          DebugData.setDebugLevel(newValue??2);
-                                          _onPressed();
-                                        });
-                                      },
-                                      items:<int>[1,2,3].map<DropdownMenuItem<int>>((int level){
-                                        return DropdownMenuItem<int>(
-                                            value: level,
-                                            child: Text("$level"));
-                                      }).toList(),
-                                    ),
-                                  ),
-                                  Flexible(
-                                      flex: 4,
-                                      child: SizedBox.expand(
-                                        child:
-                                        ElevatedButton(
-                                            onPressed: _turnOffDebugMode,
-                                            child: const Text(
-                                                "Turn off debug mode"
-                                            )
-                                        ),
-                                      )
-                                  ),
-                                ]
-                            )
-                        ),
-                    ],
+                                Flexible(
+                                    flex: 4,
+                                    child: SizedBox.expand(
+                                      child: ElevatedButton(
+                                          onPressed: _turnOffDebugMode,
+                                          child: const Text(
+                                              "Turn off debug mode")),
+                                    )),
+                              ])),
+                  ],
                 ),
               ],
             ),
@@ -266,18 +249,17 @@ class _MyHomePageState extends State<MyHomePage> {
                   maxScale: 5.6,
                   child: GraphView(
                     graph: graph,
-                    algorithm: BuchheimWalkerAlgorithm(builder,
-                        TreeEdgeRenderer(builder)),
+                    algorithm: BuchheimWalkerAlgorithm(
+                        builder, TreeEdgeRenderer(builder)),
                     paint: Paint()
                       ..color = Colors.green
                       ..strokeWidth = 1
                       ..style = PaintingStyle.stroke,
                     builder: (Node node) {
-                      return rectangleWidget(nodeNames[node]??"Error");
+                      return rectangleWidget(nodeNames[node] ?? "Error");
                     },
                   )),
             ),
-
           ],
         ),
       ),
@@ -303,8 +285,7 @@ class _MyHomePageState extends State<MyHomePage> {
               BoxShadow(color: Colors.orange, spreadRadius: 1),
             ],
           ),
-          child: Text(text)
-      ),
+          child: Text(text)),
     );
   }
 
@@ -314,12 +295,10 @@ class _MyHomePageState extends State<MyHomePage> {
     graph = Graph()..isTree = true;
     graph.addNode(Node.Id(-201));
 
-
     builder
       ..siblingSeparation = (100)
       ..levelSeparation = (150)
       ..subtreeSeparation = (150)
       ..orientation = (BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM);
-
   }
 }
