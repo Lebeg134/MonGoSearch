@@ -1,14 +1,117 @@
 name: Gh-Pages
 
 on:
-  push:
+  pull_request:
     branches: [main]
 
 jobs:
-  build:
+  test:
+    name: Test & Build
     runs-on: ubuntu-latest
-
+    
     steps:
-      - uses: actions/checkout@v2 # Only works with v2
-      - uses: subosito/flutter-action@v1
-      - uses: bluefireteam/flutter-gh-pages@v7
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: latest
+          
+      - name: Get dependencies
+        run: flutter pub get
+        
+      - name: Run tests
+        run: flutter test
+        
+      - name: Build web
+        run: flutter build web --release
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: flutter-web-build
+          path: build/web/
+          retention-days: 5
+
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: latest
+          
+      - name: Get dependencies
+        run: flutter pub get
+        
+      - name: Build web
+        run: flutter build web --release
+        
+      - name: Update version (auto-increment patch)
+        id: version
+        run: |
+          # Extract current version from pubspec.yaml
+          CURRENT_VERSION=$(grep "^version:" pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1)
+          
+          # Split version into MAJOR.MINOR.PATCH
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          
+          # Increment PATCH
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          BUILD_NUMBER=$((PATCH + 1))
+          
+          # Update pubspec.yaml
+          sed -i "s/^version: .*/version: $NEW_VERSION+$BUILD_NUMBER/" pubspec.yaml
+          
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          
+      - name: Commit version bump
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add pubspec.yaml
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }} [skip ci]" || echo "No changes to commit"
+          
+      - name: Push version bump
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
+          force: false
+          
+      - name: Create Release Tag
+        run: |
+          git tag -a "v${{ steps.version.outputs.version }}" -m "Release v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+        continue-on-error: true
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+        
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: build/web/
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
