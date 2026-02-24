@@ -67,11 +67,23 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _textSubmitted(String value) {
-    setState(() {
-      precedenceGraph = PrecedenceGraph.fromString(value);
-      _text = precedenceGraph?.buildString() ?? "Error";
-      graph = precedenceGraph!.toGraph();
-    });
+    // Remove all whitespace (spaces, tabs, newlines) before parsing
+    final sanitized = value.replaceAll(RegExp(r'\s+'), '');
+    try {
+      final pg = PrecedenceGraph.fromString(sanitized);
+      setState(() {
+        precedenceGraph = pg;
+        _text = precedenceGraph?.buildString() ?? "Error";
+        graph = precedenceGraph!.toGraph();
+      });
+    } catch (e) {
+      setState(() {
+        _text = "Error";
+      });
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('Parse error: $e')));
+    }
   }
 
   void _onPressed() {
@@ -126,7 +138,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     Container(
-                      height: 69,
                       constraints: const BoxConstraints(maxWidth: 750),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -138,6 +149,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                 border: OutlineInputBorder(),
                                 hintText: "Desired pokemon search string",
                               ),
+                              keyboardType: TextInputType.multiline,
+                              minLines: 3,
+                              maxLines: null,
                               onSubmitted: _textSubmitted,
                               controller: myController,
                             ),
