@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mon_go_search/creative_search/precedence_graph.dart';
+import 'package:mon_go_search/creative_search/search_string_helper.dart';
 import 'package:graphview/GraphView.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   Logger.root.level = Level.ALL;
@@ -39,6 +41,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _text = "";
+  String _invertedText = "";
   bool debugMode = false;
   PrecedenceGraph? precedenceGraph;
   final myController = TextEditingController();
@@ -48,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _text = r"¯\_(ツ)_/¯";
       precedenceGraph = null;
+      _invertedText = r"¯\_(ツ)_/¯";
       graph = Graph()..isTree = true;
       graph.nodes.add(Node.Id(-204));
       myController.clear();
@@ -72,15 +76,18 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _textSubmitted(String value) {
-    // Remove all whitespace (spaces, tabs, newlines) before parsing
-    final sanitized = value.replaceAll(RegExp(r'\s+'), '');
+    // First strip inline comments (space + #) then remove all whitespace
+    final withoutComments = SearchStringHelper.stripComments(value);
+    final sanitized = withoutComments.replaceAll(RegExp(r'\s+'), '');
     try {
       final pg = PrecedenceGraph.fromString(sanitized);
       setState(() {
         precedenceGraph = pg;
         _text = precedenceGraph?.buildString() ?? "Error";
+        _invertedText = precedenceGraph?.buildInvertedString() ?? "";
         graph = precedenceGraph!.toGraph();
       });
+        debugPrint('Converted: main="$_text" inverted="$_invertedText" debug=${DebugData.getDebugLevel()}');
     } catch (e) {
       setState(() {
         _text = "Error";
@@ -139,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      "You can use brackets! () :D",
+                      "You can use brackets () and add comments with #",
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     Container(
@@ -176,40 +183,93 @@ class _MyHomePageState extends State<MyHomePage> {
                         ],
                       ),
                     ),
-                    const Text(
-                      'Copy this to Pokemon Go:',
-                    ),
-                    Text(
-                      _text,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
                     if (_text.isNotEmpty &&
                         DebugData.getDebugLevel() <= 1 &&
-                        _text != r"¯\_(ツ)_/¯")
-                      Container(
-                        height: 42,
-                        constraints: const BoxConstraints(maxWidth: 250),
-                        child: SizedBox.expand(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Clipboard.setData(ClipboardData(text: _text));
-                              ScaffoldMessenger.of(context)
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(SnackBar(
-                                  content: Text("Copied \""
-                                      "${_text.characters.take(10)}"
-                                      "${_text.length > 10 ? "..." : ""}"
-                                      "\" to clipboard!"),
-                                ));
-                            },
-                            child: const Text(
-                              "Copy",
-                            ),
+                        _text != r"¯\\_(ツ)_/¯")
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Copy this to Pokemon Go:',
+                            textAlign: TextAlign.center,
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          Row(mainAxisSize: MainAxisSize.min, children: [
+                            Flexible(
+                              child: Text(
+                                _text,
+                                style: Theme.of(context).textTheme.headlineMedium,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              height: 36,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Clipboard.setData(ClipboardData(text: _text));
+                                  ScaffoldMessenger.of(context)
+                                    ..hideCurrentSnackBar()
+                                    ..showSnackBar(SnackBar(
+                                      content: Text("Copied \""
+                                          "${_text.characters.take(10)}"
+                                          "${_text.length > 10 ? "..." : ""}"
+                                          "\" to clipboard!"),
+                                    ));
+                                },
+                                child: const Text("Copy"),
+                              ),
+                            ),
+                          ])
+                        ],
                       ),
+                    const SizedBox(height: 6),
+                      if (_invertedText.isNotEmpty &&
+                          DebugData.getDebugLevel() <= 1 &&
+                          _invertedText != r"¯\\_(ツ)_/¯")
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "'Trash' (inverted) search string:",
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Row(mainAxisSize: MainAxisSize.min, children: [
+                              Flexible(
+                                child: Text(
+                                  _invertedText,
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.left,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                height: 36,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Clipboard.setData(
+                                        ClipboardData(text: _invertedText));
+                                    ScaffoldMessenger.of(context)
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(SnackBar(
+                                        content: Text("Copied \""
+                                            "${_invertedText.characters.take(10)}"
+                                            "${_invertedText.length > 10 ? "..." : ""}"
+                                            "\" to clipboard!"),
+                                      ));
+                                  },
+                                  child: const Text("Copy"),
+                                ),
+                              ),
+                            ])
+                          ],
+                        ),
                     if (debugMode) const Divider(),
                     if (debugMode)
                       Container(
@@ -275,7 +335,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ..strokeWidth = 1
                       ..style = PaintingStyle.stroke,
                     builder: (Node node) {
-                      return rectangleWidget(nodeNames[node] ?? "Error");
+                      return rectangleWidget(node, nodeNames[node] ?? "Error");
                     },
                   )),
             ),
@@ -293,9 +353,53 @@ class _MyHomePageState extends State<MyHomePage> {
   Graph graph = Graph()..isTree = true;
   BuchheimWalkerConfiguration builder = BuchheimWalkerConfiguration();
 
-  Widget rectangleWidget(String text) {
+  Widget rectangleWidget(Node node, String text) {
+    final id = node.key?.value ?? 0;
+    if (id == -201) {
+      return Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          boxShadow: const [
+            BoxShadow(color: Colors.orange, spreadRadius: 1),
+          ],
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          ElevatedButton(
+            onPressed: () async {
+              _nodeTapped();
+              try {
+                final uri = Uri.parse('https://github.com/Lebeg134/MonGoSearch');
+                await launchUrl(uri);
+              } catch (_) {}
+            },
+            child: const Text('Made by'),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () async {
+              _nodeTapped();
+              try {
+                final uri = Uri.parse('https://github.com/Jeshii/MonGoSearch');
+                await launchUrl(uri);
+              } catch (_) {}
+            },
+            child: const Text('Forked by Jeshii'),
+          ),
+        ]),
+      );
+    }
+
     return InkWell(
-      onTap: _nodeTapped,
+      onTap: () async {
+        _nodeTapped();
+        try {
+          if (id == -201) {
+            final uri = Uri.parse('https://github.com/Lebeg134/MonGoSearch');
+            await launchUrl(uri);
+          }
+        } catch (_) {}
+      },
       child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(

@@ -60,12 +60,12 @@ int globalID = 0;
 /// Negative node Ids are reserved for status codes
 /// Range 200-299 Success:
 /// -200 = Root
-/// -201 = Made by Lebeg134
+/// -201 = Made by Lebeg134 (Forked by Jeshii)
 /// -204 = Cleared
 /// -205 = Empty
 Map<Node, String> nodeNames = {
   Node.Id(-200): "AncestorRoot",
-  Node.Id(-201): "Made by Lebeg134",
+  Node.Id(-201): "Made by Lebeg134 / Forked by Jeshii",
   Node.Id(-204): "Cleared",
   Node.Id(-205): "Empty",
 };
