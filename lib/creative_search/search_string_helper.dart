@@ -56,52 +56,6 @@ class SearchStringHelper {
   static String _modifier = "";
   static Set<Set<String>> _allTags = {};
 
-  /// Strip comments from the input. A comment begins when one or more
-  /// whitespace characters are followed by [marker] (default '#'). Everything
-  /// from the first whitespace before the marker to the end of the line is
-  /// removed. Operates line-by-line.
-  static String stripComments(String input, {String marker = '#'}) {
-    final lines = input.split(RegExp(r'\r?\n'));
-    final out = <String>[];
-    final pattern = RegExp(r'\s+' + RegExp.escape(marker));
-    for (final line in lines) {
-      final m = pattern.firstMatch(line);
-      if (m != null) {
-        out.add(line.substring(0, m.start));
-      } else {
-        out.add(line);
-      }
-    }
-    return out.join('\n');
-  }
-
-  /// Invert a single token/leaf according to simple heuristics.
-  /// Numeric single values become ranges below them (e.g. 4 -> 0-3),
-  /// 0 becomes 1+, ranges starting at 0 become negated (e.g. 0-1 -> !0-1),
-  /// everything else is negated with a leading '!'.
-  static String invertToken(String token) {
-    final t = token.trim();
-    if (t.isEmpty) return t;
-    // If token is already negated, remove the leading '!' (toggle)
-    if (t.startsWith('!')) return t.substring(1);
-    final single = RegExp(r"^(\d+)\$");
-    final range = RegExp(r"^(\d+)-(\d+)");
-    final singleMatch = single.firstMatch(t);
-    if (singleMatch != null) {
-      final n = int.parse(singleMatch.group(1)!);
-      if (n == 0) return "1+";
-      return "0-${n - 1}";
-    }
-    final rangeMatch = range.firstMatch(t);
-    if (rangeMatch != null) {
-      final a = int.parse(rangeMatch.group(1)!);
-      // If range starts at 0, express inversion as a negated range (!0-b)
-      if (a == 0) return "!${rangeMatch.group(0)}";
-      return "0-${a - 1}";
-    }
-    return "!" + t;
-  }
-
   /// You can only run 1 of this at a time!
   /// It uses static members to save on memory!
   static String getRecursiveMethod(Set<Set<String>> allTags, String modifier) {
