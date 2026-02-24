@@ -82,6 +82,8 @@ class SearchStringHelper {
   static String invertToken(String token) {
     final t = token.trim();
     if (t.isEmpty) return t;
+    // If token is already negated, remove the leading '!' (toggle)
+    if (t.startsWith('!')) return t.substring(1);
     final single = RegExp(r"^(\d+)\$");
     final range = RegExp(r"^(\d+)-(\d+)");
     final singleMatch = single.firstMatch(t);
