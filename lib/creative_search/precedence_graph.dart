@@ -71,12 +71,12 @@ int globalID = 0;
 /// Negative node Ids are reserved for status codes
 /// Range 200-299 Success:
 /// -200 = Root
-/// -201 = Made by Lebeg134 (Forked by Jeshii)
+/// -201 = Made by Lebeg134
 /// -204 = Cleared
 /// -205 = Empty
 Map<Node, String> nodeNames = {
   Node.Id(-200): "AncestorRoot",
-  Node.Id(-201): "Made by Lebeg134 / Forked by Jeshii",
+  Node.Id(-201): "Made by Lebeg134",
   Node.Id(-204): "Cleared",
   Node.Id(-205): "Empty",
 };
@@ -91,10 +91,6 @@ abstract class PrecedenceNode {
   String getString() {
     return "dQw4w9WgXcQ"; // ¯\_(ツ)_/¯
   }
-
-  /// Return a string that represents the logical inversion of this node
-  /// following De Morgan (swap AND/OR and invert leaves).
-  String getInvertedString();
 
   List<Node> getNodes();
   void addToGraph(Graph graph);
@@ -139,11 +135,6 @@ class PrecedenceLeaf extends PrecedenceNode {
   @override
   String getString() {
     return content;
-  }
-
-  @override
-  String getInvertedString() {
-    return SearchStringHelper.invertToken(content);
   }
 
   static List<PrecedenceNode> fromStrings(
@@ -199,29 +190,6 @@ class OperandNode extends PrecedenceNode {
         return _stringAsOr();
       case Operands.and:
         return _stringAsAnd();
-    }
-  }
-
-  @override
-  String getInvertedString() {
-    if (children.isEmpty) return "";
-    // Swap operands: AND <-> OR
-    if (operand == Operands.or) {
-      // original was OR, inverted is AND of inverted children
-      List<String> parts = [];
-      for (PrecedenceNode node in children) {
-        final s = node.getInvertedString();
-        if (s.isNotEmpty) parts.add(s);
-      }
-      return parts.join(andChar);
-    } else {
-      // original was AND, inverted is OR of inverted children
-      List<String> parts = [];
-      for (PrecedenceNode node in children) {
-        final s = node.getInvertedString();
-        if (s.isNotEmpty) parts.add(s);
-      }
-      return parts.join(orChar);
     }
   }
 
@@ -383,15 +351,6 @@ class PrecedenceGraph {
     if (debugLevel >= 2) return "Disabled in debugLevel > 1";
     String? output = root?.getString();
     output ??= "Error";
-    return SearchStringHelper.simplifyResult(output);
-  }
-
-  /// Build the inverted search string following De Morgan and token inversion.
-  String buildInvertedString() {
-    if (debugLevel >= 2) return "Disabled in debugLevel > 1";
-    String? output = root?.getInvertedString();
-    output ??= "Error";
-    _log.info("buildInvertedString -> $output");
     return SearchStringHelper.simplifyResult(output);
   }
 
